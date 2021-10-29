@@ -1,4 +1,4 @@
-import kaboom, {Level} from "kaboom";
+import kaboom, {Area, AreaComp, ColorComp, GameObj, OutlineComp, PosComp, ScaleComp, SpriteComp} from "kaboom";
 
 kaboom({
     width: 1000,
@@ -46,8 +46,8 @@ type LevelInitInfo = {
     goalY: number,
     walls: WallInitInfo[],
     switchWalls: WallInitInfo[],
-    switchX: number | undefined,
-    switchY: number | undefined,
+    switchX?: number,
+    switchY?: number,
     size: number
 }
 
@@ -73,10 +73,7 @@ async function addLevel(options: LevelInitInfo = {
     // Add grid
     for (let i = 0; i < options.size; i++) {
         for (let j = 0; j < options.size; j++) {
-            /**
-             * @type {(SpriteComp|PosComp|ColorComp|string)[]}
-             */
-            let grid = [
+            let grid: (SpriteComp|PosComp|ColorComp|string)[] = [
                 sprite(`grid`, {width: cellSize, height: cellSize, quad: quad(i % 4 * 0.25, j % 4 * 0.25, 0.25, 0.25)}),
                 pos(i * cellSize, j * cellSize),
                 "grid"
@@ -818,14 +815,17 @@ scene("levelSelect", async () => {
 
     grid();
 
+    let boxHoverFunctions: Map<GameObj<SpriteComp|PosComp|OutlineComp|ScaleComp|AreaComp|ColorComp>, () => Promise<void>> = new Map();
+    let boxUnHoverFunctions: Map<GameObj<SpriteComp|PosComp|OutlineComp|ScaleComp|AreaComp|ColorComp>, () => Promise<void>> = new Map();
+
     for (let i = 1; i <= 4; i++) {
         for (let j = 1; j <= 2; j++) { // only doing 2 rows for now
-            let boxArray = [
+            let boxArray: (SpriteComp|PosComp|OutlineComp|ScaleComp|AreaComp|ColorComp|string)[] = [
                 sprite("block", {width: 100, height: 100}),
                 pos(200 * i - 50, 250 * j),
                 outline(2, {r: 0, g: 0, b: 0}),
                 scale(1),
-                area({width: 100, height: 100}),
+                area({width: 100, height: 100})
             ];
             if (getData("currentLevel", 1) < i + (j - 1) * 4) {
                 boxArray.push(color(50, 50, 50));
@@ -835,13 +835,13 @@ scene("levelSelect", async () => {
             let box = add(boxArray);
             if (getData("currentLevel", 1) < i + (j - 1) * 4) continue;
             let txt = add([
-                text(i + (j - 1) * 4, {size: 40}),
+                text(String(i + (j - 1) * 4), {size: 40}),
                 pos(0, 0),
                 scale(1)
             ]);
             txt.moveTo(200 * i - txt.width / 2, 250 * j + 50 - txt.height / 2);
             let clicked = false;
-            box.onHover = async () => {
+            boxHoverFunctions.set(box, async () => {
                 box.scaleTo(1.5);
                 box.moveTo(200 * i - 75, 250 * j - 25);
                 txt.scaleTo(1.5);
@@ -861,13 +861,13 @@ scene("levelSelect", async () => {
                     go(`level${i + (j - 1) * 4}`);
                     clicked = false;
                 }
-            };
-            box.onUnHover = () => {
+            });
+            boxUnHoverFunctions.set(box, async () => {
                 box.scaleTo(1);
                 box.moveTo(200 * i - 50, 250 * j);
                 txt.scaleTo(1);
                 txt.moveTo(200 * i - txt.width / 2, 250 * j + 50 - txt.height / 2);
-            };
+            });
         }
     }
 

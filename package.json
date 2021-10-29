@@ -1,12 +1,30 @@
 {
-	"name": "kaboom-env",
-	"dependencies": {
-		"@replit/database": "^2.0.1",
-		"chokidar": "^3.5.2",
-		"esbuild": "^0.12.19",
-		"express": "^4.17.1",
-		"kaboom": "2000.0.0",
-		"stacktrace-js": "^2.0.2",
-		"ws": "^8.2.0"
-	}
+  "name": "tight-squeeze",
+  "version": "1.0.0",
+  "description": "Push a giant block into it's goal in this fun puzzle game!",
+  "main": "index.js",
+  "dependencies": {
+    "esbuild": "^0.13.10",
+    "express": "^4.17.1",
+    "kaboom": "^2000.0.0"
+  },
+  "scripts": {
+    "start": "esbuild code/main.js --bundle > public/scripts/main.js && node ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mweir-mcst/tight-squeeze.git"
+  },
+  "keywords": [],
+  "authors": [
+    "Xander Russell <alexander.russell@mcvts.org>",
+    "Matthew Weir <matthew.weir@mcvts.org>",
+    "Faith Yap <faith.yap@mcvts.org>",
+    "Abigail Prowse <abigail.prowse@mcvts.org>"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mweir-mcst/tight-squeeze/issues"
+  },
+  "homepage": "https://github.com/mweir-mcst/tight-squeeze#readme"
 }

@@ -2411,7 +2411,7 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
   });
   var kaboom_default = zn();
 
-  // code/main.js
+  // code/main.ts
   kaboom_default({
     width: 1e3,
     height: 1e3,

@@ -1,4 +1,4 @@
-import kaboom from "kaboom";
+import kaboom, {Level} from "kaboom";
 
 kaboom({
     width: 1000,
@@ -30,34 +30,28 @@ loadSprite("block", "sprites/block.png").catch(console.error);
 loadSprite("grid", "sprites/grid.png").catch(console.error);
 loadSprite("switch", "sprites/switch.png").catch(console.error);
 
-/**
- * @typedef {object} LevelInitInfo
- * @prop {number} playerX The player's x-position
- * @prop {number} playerY The player's y-position
- * @prop {number} blockX The block's x-position
- * @prop {number} blockY The block's y-position
- * @prop {number} goalX The goal's x-position
- * @prop {number} goalY The goal's y-position
- * @prop {WallInitInfo[]} walls The walls' info
- * @prop {WallInitInfo[]} switchWalls The switch walls' info
- * @prop {number} [switchX] The switch's x-position
- * @prop {number} [switchY] The switch's y-position
- * @prop {number} size The size of the grid
- */
+type WallInitInfo = {
+    x: number,
+    y: number,
+    dir: "vertical" | "horizontal",
+    length: number
+}
 
-/**
- * @typedef {object} WallInitInfo
- * @prop {number} x The x-position of the wall
- * @prop {number} y The y-position of the wall
- * @prop {"vertical"|"horizontal"} The direction of the wall
- * @prop {number} length The length of the wall
- */
+type LevelInitInfo = {
+    playerX: number,
+    playerY: number,
+    blockX: number,
+    blockY: number,
+    goalX: number,
+    goalY: number,
+    walls: WallInitInfo[],
+    switchWalls: WallInitInfo[],
+    switchX: number | undefined,
+    switchY: number | undefined,
+    size: number
+}
 
-/**
- * Initializes a level inside a scene
- * @param {LevelInitInfo} [options] The options for the level
- */
-async function addLevel(options = {
+async function addLevel(options: LevelInitInfo = {
     playerX: 0,
     playerY: 3,
     blockX: 3,
@@ -69,7 +63,6 @@ async function addLevel(options = {
         y: 2,
         dir: "horizontal",
         length: 10
-
     }],
     switchWalls: [],
     size: 10
@@ -80,6 +73,9 @@ async function addLevel(options = {
     // Add grid
     for (let i = 0; i < options.size; i++) {
         for (let j = 0; j < options.size; j++) {
+            /**
+             * @type {(SpriteComp|PosComp|ColorComp|string)[]}
+             */
             let grid = [
                 sprite(`grid`, {width: cellSize, height: cellSize, quad: quad(i % 4 * 0.25, j % 4 * 0.25, 0.25, 0.25)}),
                 pos(i * cellSize, j * cellSize),

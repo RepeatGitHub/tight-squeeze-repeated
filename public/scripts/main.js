@@ -1,4 +1,25 @@
 (() => {
+  var __async = (__this, __arguments, generator) => {
+    return new Promise((resolve, reject) => {
+      var fulfilled = (value) => {
+        try {
+          step(generator.next(value));
+        } catch (e) {
+          reject(e);
+        }
+      };
+      var rejected = (value) => {
+        try {
+          step(generator.throw(value));
+        } catch (e) {
+          reject(e);
+        }
+      };
+      var step = (x) => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
+      step((generator = generator.apply(__this, __arguments)).next());
+    });
+  };
+
   // node_modules/kaboom/dist/kaboom.mjs
   var Gt = Object.defineProperty;
   var xn = Object.defineProperties;
@@ -2435,307 +2456,323 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
   loadSprite("block", "sprites/block.png").catch(console.error);
   loadSprite("grid", "sprites/grid.png").catch(console.error);
   loadSprite("switch", "sprites/switch.png").catch(console.error);
-  async function addLevel(options = {
-    playerX: 0,
-    playerY: 3,
-    blockX: 3,
-    blockY: 3,
-    goalX: 5,
-    goalY: 5,
-    walls: [{
-      x: 0,
-      y: 2,
-      dir: "horizontal",
-      length: 10
-    }],
-    switchWalls: [],
-    size: 10
-  }) {
-    const cellSize = 1e3 / options.size;
-    let switchObj;
-    for (let i = 0; i < options.size; i++) {
-      for (let j = 0; j < options.size; j++) {
-        let grid2 = [
-          sprite(`grid`, { width: cellSize, height: cellSize, quad: quad(i % 4 * 0.25, j % 4 * 0.25, 0.25, 0.25) }),
-          pos(i * cellSize, j * cellSize),
-          "grid"
-        ];
-        if (i >= options.goalX && i <= options.goalX + 4 && j >= options.goalY && j <= options.goalY + 4)
-          grid2.push(color(100, 100, 100));
-        add(grid2);
-      }
+  function scaleFromCenter(scale2, objs) {
+    for (let area2 of objs.areas) {
+      if (area2.scale.x === scale2 && area2.scale.y === scale2)
+        continue;
+      area2.moveBy(area2.area.width / 2, area2.area.height / 2);
+      area2.scaleTo(scale2);
+      area2.moveBy(area2.area.width * scale2 / -2, area2.area.height * scale2 / -2);
     }
-    add([
-      pos(0, 0),
-      area({ width: 1, height: 1e3 }),
-      solid()
-    ]);
-    add([
-      pos(999, 0),
-      area({ width: 1, height: 1e3 }),
-      solid()
-    ]);
-    add([
-      pos(0, 0),
-      area({ width: 1e3, height: 1 }),
-      solid()
-    ]);
-    add([
-      pos(0, 999),
-      area({ width: 1e3, height: 1 }),
-      solid()
-    ]);
-    const goal = add([
-      pos(options.goalX * cellSize, options.goalY * cellSize),
-      area({ width: cellSize * 5, height: cellSize * 5 }),
-      "goal"
-    ]);
-    if (typeof options.switchX === "number" && typeof options.switchY === "number") {
-      switchObj = add([
-        sprite("switch", { width: cellSize, height: cellSize }),
-        pos(options.switchX * cellSize, options.switchY * cellSize),
-        area({ width: cellSize, height: cellSize })
-      ]);
-    }
-    const player = add([
-      sprite("player", { width: cellSize, height: cellSize }),
-      area({ width: cellSize - 2, height: cellSize - 2 }),
-      solid(),
-      pos(options.playerX * cellSize + 1, options.playerY * cellSize + 1),
-      "player"
-    ]);
-    const block = add([
-      sprite("block", { width: cellSize * 5, height: cellSize * 5 }),
-      area({ width: cellSize * 5 - 2, height: cellSize * 5 - 2 }),
-      solid(),
-      pos(options.blockX * cellSize + 1, options.blockY * cellSize + 1),
-      "block"
-    ]);
-    for (let i = 0; i < options.walls.length; i++) {
-      let wall = options.walls[i];
-      add([
-        pos(wall.dir === "vertical" ? wall.x * cellSize - 1 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 1),
-        area({ width: wall.dir === "vertical" ? 2 : wall.length * cellSize, height: wall.dir === "vertical" ? wall.length * cellSize : 2 }),
-        solid(),
-        color(0, 0, 0)
-      ]);
-      add([
-        rect(wall.dir === "vertical" ? 6 : wall.length * cellSize, wall.dir === "vertical" ? wall.length * cellSize : 6),
-        pos(wall.dir === "vertical" ? wall.x * cellSize - 3 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 3),
-        color(0, 0, 0)
-      ]);
-    }
-    for (let i = 0; i < options.switchWalls.length; i++) {
-      let wall = options.switchWalls[i];
-      add([
-        pos(wall.dir === "vertical" ? wall.x * cellSize - 1 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 1),
-        area({ width: wall.dir === "vertical" ? 2 : wall.length * cellSize, height: wall.dir === "vertical" ? wall.length * cellSize : 2 }),
-        solid(),
-        color(0, 0, 255),
-        "switchWallCollision"
-      ]);
-      add([
-        rect(wall.dir === "vertical" ? 6 : wall.length * cellSize, wall.dir === "vertical" ? wall.length * cellSize : 6),
-        pos(wall.dir === "vertical" ? wall.x * cellSize - 3 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 3),
-        color(0, 0, 255),
-        opacity(1),
-        "switchWallModel"
-      ]);
-    }
-    keyPress(["left", "a"], async () => {
-      if (hasWon || moving)
-        return;
-      moving = true;
-      let sound = play("move");
-      for (let i = 0; i < 4; i++) {
-        if (player.pos.x === block.pos.x + cellSize * 5 && player.pos.y === block.pos.y + cellSize * 2)
-          block.moveBy(cellSize / -4, 0);
-        player.moveBy(cellSize / -4, 0);
-        await wait(0);
-      }
-      player.pos.x++;
-      if (player.pos.x % cellSize !== 1)
-        player.pos.x = player.pos.x - player.pos.x % cellSize + 1;
-      sound.stop();
-      moving = false;
-    });
-    keyPress(["right", "d"], async () => {
-      if (hasWon || moving)
-        return;
-      moving = true;
-      let sound = play("move");
-      for (let i = 0; i < 4; i++) {
-        if (player.pos.x === block.pos.x - cellSize && player.pos.y === block.pos.y + cellSize * 2)
-          block.moveBy(cellSize / 4, 0);
-        player.moveBy(cellSize / 4, 0);
-        await wait(0);
-      }
-      if (player.pos.x % cellSize !== 1)
-        player.pos.x = player.pos.x - player.pos.x % cellSize + 1;
-      sound.stop();
-      moving = false;
-    });
-    keyPress(["up", "w"], async () => {
-      if (hasWon || moving)
-        return;
-      moving = true;
-      let sound = play("move");
-      for (let i = 0; i < 4; i++) {
-        if (player.pos.x === block.pos.x + cellSize * 2 && player.pos.y === block.pos.y + cellSize * 5)
-          block.moveBy(0, cellSize / -4);
-        player.moveBy(0, cellSize / -4);
-        await wait(0);
-      }
-      player.pos.y++;
-      if (player.pos.y % cellSize !== 1)
-        player.pos.y = player.pos.y - player.pos.y % cellSize + 1;
-      sound.stop();
-      moving = false;
-    });
-    keyPress(["down", "s"], async () => {
-      if (hasWon || moving)
-        return;
-      moving = true;
-      let sound = play("move");
-      for (let i = 0; i < 4; i++) {
-        if (player.pos.x === block.pos.x + cellSize * 2 && player.pos.y === block.pos.y - cellSize)
-          block.moveBy(0, cellSize / 4);
-        player.moveBy(0, cellSize / 4);
-        await wait(0);
-      }
-      if (player.pos.y % cellSize !== 1)
-        player.pos.y = player.pos.y - player.pos.y % cellSize + 1;
-      sound.stop();
-      moving = false;
-    });
-    let paused = false;
-    keyPress("r", async () => {
-      if (paused) {
-        paused = false;
-        hasWon = false;
-        paused1.opacity = 0;
-        paused2.opacity = 0;
-        paused3.opacity = 0;
-        for (let i = 0; i < 10; i++) {
-          overlay.opacity += 0.05;
-          await wait(0);
-        }
-        music.stop();
-        go(`levelSelect`);
-      } else {
-        if (hasWon)
-          return;
-        for (let i = 0; i < 10; i++) {
-          overlay.opacity += 0.1;
-          await wait(0);
-        }
-        go(`level${level}`);
-      }
-    });
-    if (switchObj)
-      switchObj.collides("block", () => {
-        play("switch");
-      });
-    let paused1 = add([
-      text("Paused", { size: 100 }),
-      pos(0, 0),
-      opacity(0),
-      z(100)
-    ]);
-    paused1.moveTo(500 - paused1.width / 2, 200);
-    let paused2 = add([
-      text("Press P to Continue", { size: 50 }),
-      pos(0, 0),
-      opacity(0),
-      z(100)
-    ]);
-    paused2.moveTo(500 - paused2.width / 2, 500);
-    let paused3 = add([
-      text("Press R for Level Select", { size: 50 }),
-      pos(0, 0),
-      opacity(0),
-      z(100)
-    ]);
-    paused3.moveTo(500 - paused3.width / 2, 525 + paused2.height);
-    keyPress("p", async () => {
-      if (paused) {
-        for (let i = 0; i < 5; i++) {
-          overlay.opacity -= 0.1;
-          paused1.opacity -= 0.2;
-          paused2.opacity -= 0.2;
-          paused3.opacity -= 0.2;
-          music.volume(0.5 + (i + 1) * 0.1);
-          await wait(0);
-        }
-        hasWon = false;
-        paused = false;
-      } else {
-        if (hasWon)
-          return;
-        paused = true;
-        hasWon = true;
-        for (let i = 0; i < 5; i++) {
-          overlay.opacity += 0.1;
-          paused1.opacity += 0.2;
-          paused2.opacity += 0.2;
-          paused3.opacity += 0.2;
-          music.volume(1 - (i + 1) * 0.1);
-          await wait(0);
-        }
-      }
-    });
-    let overlay = add([
-      rect(1e3, 1e3),
-      color(0, 0, 0),
-      opacity(1),
-      z(99)
-    ]);
-    action(async () => {
-      if (goal.pos.x === block.pos.x - 1 && goal.pos.y === block.pos.y - 1 && !hasWon) {
-        hasWon = true;
-        every("grid", (i) => i.color = { r: 255, g: 255, b: 0 });
-        play("finish");
-        await wait(3);
-        level++;
-        for (let i = 0; i < 10; i++) {
-          overlay.opacity += 0.1;
-          await wait(0);
-        }
-        go(`level${level}`);
-        if (getData("currentLevel", 1) < level)
-          setData("currentLevel", level);
-        hasWon = false;
-      }
-      if (switchObj) {
-        if (block.isTouching(switchObj)) {
-          every("switchWallCollision", (i) => i.solid = false);
-          every("switchWallModel", (i) => i.opacity = 0.5);
-        } else {
-          every("switchWallCollision", (i) => i.solid = true);
-          every("switchWallModel", (i) => i.opacity = 1);
-        }
-      }
-    });
-    for (let i = 0; i < 10; i++) {
-      overlay.opacity -= 0.1;
-      await wait(0);
+    for (let text2 of objs.texts) {
+      text2.moveBy(text2.width / 2, text2.height / 2);
+      text2.scaleTo(scale2);
+      text2.moveBy(text2.width * scale2 / -2, text2.height * scale2 / -2);
     }
   }
-  scene("level1", async () => {
+  function addLevel() {
+    return __async(this, arguments, function* (options = {
+      playerX: 0,
+      playerY: 3,
+      blockX: 3,
+      blockY: 3,
+      goalX: 5,
+      goalY: 5,
+      walls: [{
+        x: 0,
+        y: 2,
+        dir: "horizontal",
+        length: 10
+      }],
+      switchWalls: [],
+      size: 10
+    }) {
+      const cellSize = 1e3 / options.size;
+      let switchObj;
+      for (let i = 0; i < options.size; i++) {
+        for (let j = 0; j < options.size; j++) {
+          let grid2 = [
+            sprite(`grid`, { width: cellSize, height: cellSize, quad: quad(i % 4 * 0.25, j % 4 * 0.25, 0.25, 0.25) }),
+            pos(i * cellSize, j * cellSize),
+            "grid"
+          ];
+          if (i >= options.goalX && i <= options.goalX + 4 && j >= options.goalY && j <= options.goalY + 4)
+            grid2.push(color(100, 100, 100));
+          add(grid2);
+        }
+      }
+      add([
+        pos(0, 0),
+        area({ width: 1, height: 1e3 }),
+        solid()
+      ]);
+      add([
+        pos(999, 0),
+        area({ width: 1, height: 1e3 }),
+        solid()
+      ]);
+      add([
+        pos(0, 0),
+        area({ width: 1e3, height: 1 }),
+        solid()
+      ]);
+      add([
+        pos(0, 999),
+        area({ width: 1e3, height: 1 }),
+        solid()
+      ]);
+      const goal = add([
+        pos(options.goalX * cellSize, options.goalY * cellSize),
+        area({ width: cellSize * 5, height: cellSize * 5 }),
+        "goal"
+      ]);
+      if (typeof options.switchX === "number" && typeof options.switchY === "number") {
+        switchObj = add([
+          sprite("switch", { width: cellSize, height: cellSize }),
+          pos(options.switchX * cellSize, options.switchY * cellSize),
+          area({ width: cellSize, height: cellSize })
+        ]);
+      }
+      const player = add([
+        sprite("player", { width: cellSize, height: cellSize }),
+        area({ width: cellSize - 2, height: cellSize - 2 }),
+        solid(),
+        pos(options.playerX * cellSize + 1, options.playerY * cellSize + 1),
+        "player"
+      ]);
+      const block = add([
+        sprite("block", { width: cellSize * 5, height: cellSize * 5 }),
+        area({ width: cellSize * 5 - 2, height: cellSize * 5 - 2 }),
+        solid(),
+        pos(options.blockX * cellSize + 1, options.blockY * cellSize + 1),
+        "block"
+      ]);
+      for (let i = 0; i < options.walls.length; i++) {
+        let wall = options.walls[i];
+        add([
+          pos(wall.dir === "vertical" ? wall.x * cellSize - 1 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 1),
+          area({ width: wall.dir === "vertical" ? 2 : wall.length * cellSize, height: wall.dir === "vertical" ? wall.length * cellSize : 2 }),
+          solid(),
+          color(0, 0, 0)
+        ]);
+        add([
+          rect(wall.dir === "vertical" ? 6 : wall.length * cellSize, wall.dir === "vertical" ? wall.length * cellSize : 6),
+          pos(wall.dir === "vertical" ? wall.x * cellSize - 3 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 3),
+          color(0, 0, 0)
+        ]);
+      }
+      for (let i = 0; i < options.switchWalls.length; i++) {
+        let wall = options.switchWalls[i];
+        add([
+          pos(wall.dir === "vertical" ? wall.x * cellSize - 1 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 1),
+          area({ width: wall.dir === "vertical" ? 2 : wall.length * cellSize, height: wall.dir === "vertical" ? wall.length * cellSize : 2 }),
+          solid(),
+          color(0, 0, 255),
+          "switchWallCollision"
+        ]);
+        add([
+          rect(wall.dir === "vertical" ? 6 : wall.length * cellSize, wall.dir === "vertical" ? wall.length * cellSize : 6),
+          pos(wall.dir === "vertical" ? wall.x * cellSize - 3 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 3),
+          color(0, 0, 255),
+          opacity(1),
+          "switchWallModel"
+        ]);
+      }
+      keyPress(["left", "a"], () => __async(this, null, function* () {
+        if (hasWon || moving)
+          return;
+        moving = true;
+        let sound = play("move");
+        for (let i = 0; i < 4; i++) {
+          if (player.pos.x === block.pos.x + cellSize * 5 && player.pos.y === block.pos.y + cellSize * 2)
+            block.moveBy(cellSize / -4, 0);
+          player.moveBy(cellSize / -4, 0);
+          yield wait(0);
+        }
+        player.pos.x++;
+        if (player.pos.x % cellSize !== 1)
+          player.pos.x = player.pos.x - player.pos.x % cellSize + 1;
+        sound.stop();
+        moving = false;
+      }));
+      keyPress(["right", "d"], () => __async(this, null, function* () {
+        if (hasWon || moving)
+          return;
+        moving = true;
+        let sound = play("move");
+        for (let i = 0; i < 4; i++) {
+          if (player.pos.x === block.pos.x - cellSize && player.pos.y === block.pos.y + cellSize * 2)
+            block.moveBy(cellSize / 4, 0);
+          player.moveBy(cellSize / 4, 0);
+          yield wait(0);
+        }
+        if (player.pos.x % cellSize !== 1)
+          player.pos.x = player.pos.x - player.pos.x % cellSize + 1;
+        sound.stop();
+        moving = false;
+      }));
+      keyPress(["up", "w"], () => __async(this, null, function* () {
+        if (hasWon || moving)
+          return;
+        moving = true;
+        let sound = play("move");
+        for (let i = 0; i < 4; i++) {
+          if (player.pos.x === block.pos.x + cellSize * 2 && player.pos.y === block.pos.y + cellSize * 5)
+            block.moveBy(0, cellSize / -4);
+          player.moveBy(0, cellSize / -4);
+          yield wait(0);
+        }
+        player.pos.y++;
+        if (player.pos.y % cellSize !== 1)
+          player.pos.y = player.pos.y - player.pos.y % cellSize + 1;
+        sound.stop();
+        moving = false;
+      }));
+      keyPress(["down", "s"], () => __async(this, null, function* () {
+        if (hasWon || moving)
+          return;
+        moving = true;
+        let sound = play("move");
+        for (let i = 0; i < 4; i++) {
+          if (player.pos.x === block.pos.x + cellSize * 2 && player.pos.y === block.pos.y - cellSize)
+            block.moveBy(0, cellSize / 4);
+          player.moveBy(0, cellSize / 4);
+          yield wait(0);
+        }
+        if (player.pos.y % cellSize !== 1)
+          player.pos.y = player.pos.y - player.pos.y % cellSize + 1;
+        sound.stop();
+        moving = false;
+      }));
+      let paused = false;
+      keyPress("r", () => __async(this, null, function* () {
+        if (paused) {
+          paused = false;
+          hasWon = false;
+          paused1.opacity = 0;
+          paused2.opacity = 0;
+          paused3.opacity = 0;
+          for (let i = 0; i < 10; i++) {
+            overlay.opacity += 0.05;
+            yield wait(0);
+          }
+          music.stop();
+          go(`levelSelect`);
+        } else {
+          if (hasWon)
+            return;
+          for (let i = 0; i < 10; i++) {
+            overlay.opacity += 0.1;
+            yield wait(0);
+          }
+          go(`level${level}`);
+        }
+      }));
+      if (switchObj)
+        switchObj.collides("block", () => {
+          play("switch");
+        });
+      let paused1 = add([
+        text("Paused", { size: 100 }),
+        pos(0, 0),
+        opacity(0),
+        z(100)
+      ]);
+      paused1.moveTo(500 - paused1.width / 2, 200);
+      let paused2 = add([
+        text("Press P to Continue", { size: 50 }),
+        pos(0, 0),
+        opacity(0),
+        z(100)
+      ]);
+      paused2.moveTo(500 - paused2.width / 2, 500);
+      let paused3 = add([
+        text("Press R for Level Select", { size: 50 }),
+        pos(0, 0),
+        opacity(0),
+        z(100)
+      ]);
+      paused3.moveTo(500 - paused3.width / 2, 525 + paused2.height);
+      keyPress("p", () => __async(this, null, function* () {
+        if (paused) {
+          for (let i = 0; i < 5; i++) {
+            overlay.opacity -= 0.1;
+            paused1.opacity -= 0.2;
+            paused2.opacity -= 0.2;
+            paused3.opacity -= 0.2;
+            music.volume(0.5 + (i + 1) * 0.1);
+            yield wait(0);
+          }
+          hasWon = false;
+          paused = false;
+        } else {
+          if (hasWon)
+            return;
+          paused = true;
+          hasWon = true;
+          for (let i = 0; i < 5; i++) {
+            overlay.opacity += 0.1;
+            paused1.opacity += 0.2;
+            paused2.opacity += 0.2;
+            paused3.opacity += 0.2;
+            music.volume(1 - (i + 1) * 0.1);
+            yield wait(0);
+          }
+        }
+      }));
+      let overlay = add([
+        rect(1e3, 1e3),
+        color(0, 0, 0),
+        opacity(1),
+        z(99)
+      ]);
+      action(() => __async(this, null, function* () {
+        if (goal.pos.x === block.pos.x - 1 && goal.pos.y === block.pos.y - 1 && !hasWon) {
+          hasWon = true;
+          every("grid", (i) => i.color = { r: 255, g: 255, b: 0 });
+          play("finish");
+          yield wait(3);
+          level++;
+          for (let i = 0; i < 10; i++) {
+            overlay.opacity += 0.1;
+            yield wait(0);
+          }
+          go(`level${level}`);
+          if (getData("currentLevel", 1) < level)
+            setData("currentLevel", level);
+          hasWon = false;
+        }
+        if (switchObj) {
+          if (block.isTouching(switchObj)) {
+            every("switchWallCollision", (i) => i.solid = false);
+            every("switchWallModel", (i) => i.opacity = 0.5);
+          } else {
+            every("switchWallCollision", (i) => i.solid = true);
+            every("switchWallModel", (i) => i.opacity = 1);
+          }
+        }
+      }));
+      for (let i = 0; i < 10; i++) {
+        overlay.opacity -= 0.1;
+        yield wait(0);
+      }
+    });
+  }
+  scene("level1", () => __async(void 0, null, function* () {
     add([
       text("WASD or arrows to move.\nPush the block at the center\nof its sides. \nPress R to reset, P to pause.", { size: 40 }),
       pos(20, 15),
       z(98)
     ]);
-    await addLevel();
-  });
-  scene("level2", async () => {
+    yield addLevel();
+  }));
+  scene("level2", () => __async(void 0, null, function* () {
     add([
       text("Press P to Pause", { size: 40 }),
       pos(20, 15),
       z(98)
     ]);
-    await addLevel({
+    yield addLevel({
       playerX: 0,
       playerY: 2,
       blockX: 3,
@@ -2766,9 +2803,9 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       switchWalls: [],
       size: 10
     });
-  });
-  scene("level3", async () => {
-    await addLevel({
+  }));
+  scene("level3", () => __async(void 0, null, function* () {
+    yield addLevel({
       playerX: 0,
       playerY: 4,
       blockX: 1,
@@ -2794,9 +2831,9 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       switchWalls: [],
       size: 10
     });
-  });
-  scene("level4", async () => {
-    await addLevel({
+  }));
+  scene("level4", () => __async(void 0, null, function* () {
+    yield addLevel({
       playerX: 0,
       playerY: 4,
       blockX: 1,
@@ -2847,9 +2884,9 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       switchWalls: [],
       size: 16
     });
-  });
-  scene("level5", async () => {
-    await addLevel({
+  }));
+  scene("level5", () => __async(void 0, null, function* () {
+    yield addLevel({
       playerX: 15,
       playerY: 14,
       blockX: 10,
@@ -2930,14 +2967,14 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       switchWalls: [],
       size: 16
     });
-  });
-  scene("level6", async () => {
+  }));
+  scene("level6", () => __async(void 0, null, function* () {
     add([
       text("The circle is a switch.When\nthe block sits on top of it, \nall blue walls allow you to\nwalk through them.", { size: 40 }),
       pos(20, 15),
       z(98)
     ]);
-    await addLevel({
+    yield addLevel({
       playerX: 0,
       playerY: 3,
       blockX: 3,
@@ -2965,9 +3002,9 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       }],
       size: 10
     });
-  });
-  scene("level7", async () => {
-    await addLevel({
+  }));
+  scene("level7", () => __async(void 0, null, function* () {
+    yield addLevel({
       playerX: 0,
       playerY: 3,
       blockX: 3,
@@ -3015,9 +3052,9 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       }],
       size: 10
     });
-  });
-  scene("level8", async () => {
-    await addLevel({
+  }));
+  scene("level8", () => __async(void 0, null, function* () {
+    yield addLevel({
       playerX: 1,
       playerY: 3,
       blockX: 2,
@@ -3095,7 +3132,7 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       }],
       size: 16
     });
-  });
+  }));
   function grid() {
     for (let i = 0; i < 10; i++) {
       for (let j = 0; j < 10; j++) {
@@ -3127,35 +3164,85 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
   });
   scene("welcome", () => {
     grid();
-    add([
-      sprite("block", { width: 499, height: 499 }),
-      pos(251, 251)
+    let box1 = add([
+      sprite("block", { width: 300, height: 300 }),
+      pos(350, 350),
+      area({ width: 300, height: 300 }),
+      scale()
     ]);
     let text1 = add([
+      text("Play", { size: 60 }),
+      pos(0, 0),
+      scale()
+    ]);
+    text1.moveTo(500 - text1.width / 2, 500 - text1.height / 2);
+    let box2 = add([
+      sprite("block", { width: 200, height: 200 }),
+      pos(100, 400),
+      area({ width: 200, height: 200 }),
+      scale()
+    ]);
+    let text2 = add([
+      text("About", { size: 35 }),
+      pos(0, 0),
+      scale()
+    ]);
+    text2.moveTo(200 - text2.width / 2, 500 - text2.height / 2);
+    let box3 = add([
+      sprite("block", { width: 200, height: 200 }),
+      pos(700, 400),
+      area({ width: 200, height: 200 }),
+      scale()
+    ]);
+    let text3 = add([
+      text("Level", { size: 35 }),
+      pos(0, 0),
+      scale()
+    ]);
+    let text4 = add([
+      text("Editor", { size: 35 }),
+      pos(0, 0),
+      scale()
+    ]);
+    let height = text3.height + text4.height;
+    text3.moveTo(800 - text3.width / 2, 500 - height / 2);
+    text4.moveTo(800 - text4.width / 2, 500);
+    let text5 = add([
       text("Tight Squeeze", { size: 80 }),
       pos(0, 0)
     ]);
-    text1.moveTo(500 - text1.width / 2, 100);
-    let text2 = add([
-      text("Press Space", { size: 75 }),
-      pos(0, 0)
-    ]);
-    text2.moveTo(500 - text2.width / 2, 900 - text2.height);
+    text5.moveTo(500 - text5.width / 2, 100);
     let overlay = add([
       rect(1e3, 1e3),
       color(0, 0, 0),
       opacity(0),
       z(99)
     ]);
-    keyPress("space", async () => {
-      for (let i = 0; i < 10; i++) {
-        overlay.opacity += 0.1;
-        await wait(0);
+    action(() => {
+      let hover = false;
+      if (box1.hasPoint(mouse)) {
+        scaleFromCenter(1.5, { areas: [box1], texts: [text1] });
+        hover = true;
+      } else {
+        scaleFromCenter(1, { areas: [box1], texts: [text1] });
       }
-      go("levelSelect");
+      if (box2.hasPoint(mouse)) {
+        scaleFromCenter(1.5, { areas: [box2], texts: [text2] });
+        hover = true;
+      } else {
+        scaleFromCenter(1, { areas: [box2], texts: [text2] });
+      }
+      if (box3.hasPoint(mouse)) {
+        scaleFromCenter(1.5, { areas: [box3], texts: [text3, text4] });
+        hover = true;
+      } else {
+        scaleFromCenter(1, { areas: [box3], texts: [text3, text4] });
+      }
+      if (!hover)
+        cursor("default");
     });
   });
-  scene("levelSelect", async () => {
+  scene("levelSelect", () => __async(void 0, null, function* () {
     let overlay = add([
       rect(1e3, 1e3),
       color(0, 0, 0),
@@ -3163,12 +3250,13 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       z(99)
     ]);
     grid();
+    let boxHoverFunctions = new Map();
+    let boxUnHoverFunctions = new Map();
     for (let i = 1; i <= 4; i++) {
       for (let j = 1; j <= 2; j++) {
         let boxArray = [
           sprite("block", { width: 100, height: 100 }),
           pos(200 * i - 50, 250 * j),
-          outline(2, { r: 0, g: 0, b: 0 }),
           scale(1),
           area({ width: 100, height: 100 })
         ];
@@ -3181,13 +3269,13 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
         if (getData("currentLevel", 1) < i + (j - 1) * 4)
           continue;
         let txt2 = add([
-          text(i + (j - 1) * 4, { size: 40 }),
+          text(String(i + (j - 1) * 4), { size: 40 }),
           pos(0, 0),
           scale(1)
         ]);
         txt2.moveTo(200 * i - txt2.width / 2, 250 * j + 50 - txt2.height / 2);
         let clicked = false;
-        box.onHover = async () => {
+        boxHoverFunctions.set(box, () => __async(void 0, null, function* () {
           box.scaleTo(1.5);
           box.moveTo(200 * i - 75, 250 * j - 25);
           txt2.scaleTo(1.5);
@@ -3197,7 +3285,7 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
             clicked = true;
             for (let i2 = 0; i2 < 10; i2++) {
               overlay.opacity += 0.1;
-              await wait(0);
+              yield wait(0);
             }
             music = play("music", {
               loop: true
@@ -3207,13 +3295,13 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
             go(`level${i + (j - 1) * 4}`);
             clicked = false;
           }
-        };
-        box.onUnHover = () => {
+        }));
+        boxUnHoverFunctions.set(box, () => __async(void 0, null, function* () {
           box.scaleTo(1);
           box.moveTo(200 * i - 50, 250 * j);
           txt2.scaleTo(1);
           txt2.moveTo(200 * i - txt2.width / 2, 250 * j + 50 - txt2.height / 2);
-        };
+        }));
       }
     }
     let txt = add([
@@ -3225,10 +3313,10 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
       let hover = false;
       every("selectBox", (box) => {
         if (box.hasPoint(mouse)) {
-          box.onHover();
+          boxHoverFunctions.get(box)();
           hover = true;
         } else {
-          box.onUnHover();
+          boxUnHoverFunctions.get(box)();
         }
       });
       if (!hover)
@@ -3236,8 +3324,8 @@ vec4 frag(vec3 pos, vec2 uv, vec4 color, sampler2D tex) {
     });
     for (let i = 0; i < 10; i++) {
       overlay.opacity -= 0.1;
-      await wait(0);
+      yield wait(0);
     }
-  });
+  }));
   go("welcome");
 })();

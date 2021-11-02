@@ -1,4 +1,4 @@
-import kaboom, {Area, AreaComp, ColorComp, GameObj, OutlineComp, PosComp, ScaleComp, SpriteComp} from "kaboom";
+import kaboom, {AreaComp, ColorComp, GameObj, PosComp, ScaleComp, SpriteComp, TextComp} from "kaboom";
 
 kaboom({
     width: 1000,
@@ -49,6 +49,20 @@ type LevelInitInfo = {
     switchX?: number,
     switchY?: number,
     size: number
+}
+
+function scaleFromCenter(scale: number, objs: {areas?: GameObj<ScaleComp|PosComp|AreaComp>[], texts?: GameObj<ScaleComp|PosComp|TextComp>[]}) {
+    for (let area of objs.areas) {
+        if (area.scale.x === scale && area.scale.y === scale) continue;
+        area.moveBy(area.area.width / 2, area.area.height / 2);
+        area.scaleTo(scale);
+        area.moveBy(area.area.width * scale / -2, area.area.height * scale / -2);
+    }
+    for (let text of objs.texts) {
+        text.moveBy(text.width / 2, text.height / 2);
+        text.scaleTo(scale);
+        text.moveBy(text.width * scale / -2, text.height * scale / -2);
+    }
 }
 
 async function addLevel(options: LevelInitInfo = {
@@ -772,22 +786,60 @@ scene("level9", () => {
 scene("welcome", () => {
     grid();
 
-    add([
-        sprite("block", {width: 499, height: 499}),
-        pos(251, 251)
+    let box1 = add([
+        sprite("block", {width: 300, height: 300}),
+        pos(350, 350),
+        area({width: 300, height: 300}),
+        scale()
     ]);
 
     let text1 = add([
+        text("Play", {size: 60}),
+        pos(0, 0),
+        scale()
+    ]);
+    text1.moveTo(500 - text1.width / 2, 500 - text1.height / 2);
+
+    let box2 = add([
+        sprite("block", {width: 200, height: 200}),
+        pos(100, 400),
+        area({width: 200, height: 200}),
+        scale()
+    ]);
+
+    let text2 = add([
+        text("About", {size: 35}),
+        pos(0, 0),
+        scale()
+    ]);
+    text2.moveTo(200 - text2.width / 2, 500 - text2.height / 2);
+
+    let box3 = add([
+        sprite("block", {width: 200, height: 200}),
+        pos(700, 400),
+        area({width: 200, height: 200}),
+        scale()
+    ]);
+
+    let text3 = add([
+        text("Level", {size: 35}),
+        pos(0, 0),
+        scale()
+    ]);
+    let text4 = add([
+        text("Editor", {size: 35}),
+        pos(0, 0),
+        scale()
+    ]);
+    let height = text3.height + text4.height;
+    text3.moveTo(800 - text3.width / 2, 500 - height / 2);
+    text4.moveTo(800 - text4.width / 2, 500);
+
+    let text5 = add([
         text("Tight Squeeze", {size: 80}),
         pos(0, 0)
     ]);
-    text1.moveTo(500 - (text1.width / 2), 100);
-
-    let text2 = add([
-        text("Press Space", {size: 75}),
-        pos(0, 0)
-    ]);
-    text2.moveTo(500 - (text2.width / 2), 900 - text2.height);
+    text5.moveTo(500 - (text5.width / 2), 100);
 
     let overlay = add([
         rect(1000, 1000),
@@ -796,12 +848,27 @@ scene("welcome", () => {
         z(99)
     ]);
 
-    keyPress("space", async () => {
-        for (let i = 0; i < 10; i++) {
-            overlay.opacity += 0.1;
-            await wait(0);
+    action(() => {
+        let hover = false;
+        if (box1.hasPoint(mouse)) {
+            scaleFromCenter(1.5, {areas: [box1], texts: [text1]});
+            hover = true;
+        } else {
+            scaleFromCenter(1, {areas: [box1], texts: [text1]});
         }
-        go("levelSelect");
+        if (box2.hasPoint(mouse)) {
+            scaleFromCenter(1.5, {areas: [box2], texts: [text2]});
+            hover = true;
+        } else {
+            scaleFromCenter(1, {areas: [box2], texts: [text2]});
+        }
+        if (box3.hasPoint(mouse)) {
+            scaleFromCenter(1.5, {areas: [box3], texts: [text3, text4]});
+            hover = true;
+        } else {
+            scaleFromCenter(1, {areas: [box3], texts: [text3, text4]});
+        }
+        if (!hover) cursor("default");
     });
 });
 
@@ -815,15 +882,14 @@ scene("levelSelect", async () => {
 
     grid();
 
-    let boxHoverFunctions: Map<GameObj<SpriteComp|PosComp|OutlineComp|ScaleComp|AreaComp|ColorComp>, () => Promise<void>> = new Map();
-    let boxUnHoverFunctions: Map<GameObj<SpriteComp|PosComp|OutlineComp|ScaleComp|AreaComp|ColorComp>, () => Promise<void>> = new Map();
+    let boxHoverFunctions: Map<GameObj<SpriteComp|PosComp|ScaleComp|AreaComp|ColorComp>, () => Promise<void>> = new Map();
+    let boxUnHoverFunctions: Map<GameObj<SpriteComp|PosComp|ScaleComp|AreaComp|ColorComp>, () => Promise<void>> = new Map();
 
     for (let i = 1; i <= 4; i++) {
         for (let j = 1; j <= 2; j++) { // only doing 2 rows for now
-            let boxArray: (SpriteComp|PosComp|OutlineComp|ScaleComp|AreaComp|ColorComp|string)[] = [
+            let boxArray: (SpriteComp|PosComp|ScaleComp|AreaComp|ColorComp|string)[] = [
                 sprite("block", {width: 100, height: 100}),
                 pos(200 * i - 50, 250 * j),
-                outline(2, {r: 0, g: 0, b: 0}),
                 scale(1),
                 area({width: 100, height: 100})
             ];
@@ -879,12 +945,12 @@ scene("levelSelect", async () => {
 
     action(() => {
         let hover = false;
-        every("selectBox", box => {
+        every("selectBox", (box: GameObj<SpriteComp|PosComp|ScaleComp|AreaComp|ColorComp>) => {
             if (box.hasPoint(mouse)) {
-                box.onHover();
+                boxHoverFunctions.get(box)();
                 hover = true;
             } else {
-                box.onUnHover();
+                boxUnHoverFunctions.get(box)();
             }
         });
         if (!hover) cursor("default");

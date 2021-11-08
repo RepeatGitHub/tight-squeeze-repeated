@@ -4,12 +4,13 @@
   "description": "Push a giant block into it's goal in this fun puzzle game!",
   "main": "index.js",
   "dependencies": {
+    "bootstrap": "^5.1.3",
     "esbuild": "^0.13.10",
     "express": "^4.17.1",
     "kaboom": "^2000.0.0"
   },
   "scripts": {
-    "start": "esbuild code/main.ts --bundle > public/scripts/main.js && node ."
+    "start": "esbuild code/main.ts --bundle > public/scripts/main.js && esbuild code/editor.ts --bundle > public/scripts/editor.js && node ."
   },
   "repository": {
     "type": "git",
@@ -26,5 +27,8 @@
   "bugs": {
     "url": "https://github.com/mweir-mcst/tight-squeeze/issues"
   },
-  "homepage": "https://github.com/mweir-mcst/tight-squeeze#readme"
+  "homepage": "https://github.com/mweir-mcst/tight-squeeze#readme",
+  "devDependencies": {
+    "@types/bootstrap": "^5.1.6"
+  }
 }

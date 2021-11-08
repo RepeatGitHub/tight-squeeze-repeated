@@ -1,4 +1,4 @@
-import kaboom, {AreaComp, ColorComp, GameObj, PosComp, ScaleComp, SpriteComp, TextComp} from "kaboom";
+import kaboom, {AreaComp, ColorComp, GameObj, OpacityComp, PosComp, ScaleComp, SpriteComp, TextComp} from "kaboom";
 
 kaboom({
     width: 1000,
@@ -54,15 +54,33 @@ type LevelInitInfo = {
 function scaleFromCenter(scale: number, objs: {areas?: GameObj<ScaleComp|PosComp|AreaComp>[], texts?: GameObj<ScaleComp|PosComp|TextComp>[]}) {
     for (let area of objs.areas) {
         if (area.scale.x === scale && area.scale.y === scale) continue;
-        area.moveBy(area.area.width / 2, area.area.height / 2);
+        area.moveBy(area.area.width * area.scale.x / 2, area.area.height * area.scale.y / 2);
         area.scaleTo(scale);
         area.moveBy(area.area.width * scale / -2, area.area.height * scale / -2);
     }
     for (let text of objs.texts) {
-        text.moveBy(text.width / 2, text.height / 2);
+        if (text.scale.x === scale && text.scale.y === scale) continue;
+        text.moveBy(text.width * text.scale.x / 2, text.height * text.scale.y / 2);
         text.scaleTo(scale);
         text.moveBy(text.width * scale / -2, text.height * scale / -2);
     }
+}
+
+async function transition(overlay: GameObj<OpacityComp>, fadeIn: boolean, change = 0.1, count = 10, each: (i: number) => void = () => {}) {
+    for (let i = 0; i < count; i++) {
+        overlay.opacity += (fadeIn ? -1 : 1) * change;
+        each(i);
+        await wait(0);
+    }
+}
+
+function createOverlay(defaultOpacity = 1) {
+    return add([
+        rect(1000, 1000),
+        color(0, 0, 0),
+        opacity(defaultOpacity),
+        z(99)
+    ]);
 }
 
 async function addLevel(options: LevelInitInfo = {
@@ -255,18 +273,12 @@ async function addLevel(options: LevelInitInfo = {
             paused1.opacity = 0;
             paused2.opacity = 0;
             paused3.opacity = 0;
-            for (let i = 0; i < 10; i++) {
-                overlay.opacity += 0.05;
-                await wait(0);
-            }
+            await transition(overlay, false, 0.05);
             music.stop();
             go(`levelSelect`);
         } else {
             if (hasWon) return;
-            for (let i = 0; i < 10; i++) {
-                overlay.opacity += 0.1;
-                await wait(0);
-            }
+            await transition(overlay, false);
             go(`level${level}`);
         }
     });
@@ -301,37 +313,28 @@ async function addLevel(options: LevelInitInfo = {
 
     keyPress("p", async() => {
         if (paused) {
-            for (let i = 0; i < 5; i++) {
-                overlay.opacity -= 0.1;
+            await transition(overlay, true, 0.1, 5, i => {
                 paused1.opacity -= 0.2;
                 paused2.opacity -= 0.2;
                 paused3.opacity -= 0.2;
                 music.volume(0.5 + (i + 1) * 0.1);
-                await wait(0);
-            }
+            });
             hasWon = false;
             paused = false;
         } else {
             if (hasWon) return;
             paused = true;
             hasWon = true;
-            for (let i = 0; i < 5; i++) {
-                overlay.opacity += 0.1;
+            await transition(overlay, false, 0.1, 5, i => {
                 paused1.opacity += 0.2;
                 paused2.opacity += 0.2;
                 paused3.opacity += 0.2;
                 music.volume(1 - (i + 1) * 0.1);
-                await wait(0);
-            }
+            });
         }
     });
 
-    let overlay = add([
-        rect(1000, 1000),
-        color(0, 0, 0),
-        opacity(1),
-        z(99)
-    ]);
+    let overlay = createOverlay();
 
     action(async () => {
         if (goal.pos.x === block.pos.x - 1 && goal.pos.y === block.pos.y - 1 && !hasWon) {
@@ -340,10 +343,7 @@ async function addLevel(options: LevelInitInfo = {
             play("finish");
             await wait(3);
             level++;
-            for (let i = 0; i < 10; i++) {
-                overlay.opacity += 0.1;
-                await wait(0);
-            }
+            await transition(overlay, false);
             go(`level${level}`);
             if (getData("currentLevel", 1) < level) setData("currentLevel", level);
             hasWon = false;
@@ -359,10 +359,7 @@ async function addLevel(options: LevelInitInfo = {
         }
     })
 
-    for (let i = 0; i < 10; i++) {
-        overlay.opacity -= 0.1;
-        await wait(0);
-    }
+    await transition(overlay, true);
 }
 
 scene("level1", async () => {
@@ -802,7 +799,7 @@ scene("welcome", () => {
 
     let box2 = add([
         sprite("block", {width: 200, height: 200}),
-        pos(100, 400),
+        pos(75, 400),
         area({width: 200, height: 200}),
         scale()
     ]);
@@ -812,11 +809,11 @@ scene("welcome", () => {
         pos(0, 0),
         scale()
     ]);
-    text2.moveTo(200 - text2.width / 2, 500 - text2.height / 2);
+    text2.moveTo(175 - text2.width / 2, 500 - text2.height / 2);
 
     let box3 = add([
         sprite("block", {width: 200, height: 200}),
-        pos(700, 400),
+        pos(725, 400),
         area({width: 200, height: 200}),
         scale()
     ]);
@@ -832,8 +829,8 @@ scene("welcome", () => {
         scale()
     ]);
     let height = text3.height + text4.height;
-    text3.moveTo(800 - text3.width / 2, 500 - height / 2);
-    text4.moveTo(800 - text4.width / 2, 500);
+    text3.moveTo(825 - text3.width / 2, 500 - height / 2);
+    text4.moveTo(825 - text4.width / 2, 500);
 
     let text5 = add([
         text("Tight Squeeze", {size: 80}),
@@ -841,44 +838,54 @@ scene("welcome", () => {
     ]);
     text5.moveTo(500 - (text5.width / 2), 100);
 
-    let overlay = add([
-        rect(1000, 1000),
-        color(0, 0, 0),
-        opacity(0),
-        z(99)
-    ]);
+    let overlay = createOverlay(0);
 
-    action(() => {
+    let clickAction = false;
+    action(async () => {
         let hover = false;
         if (box1.hasPoint(mouse)) {
             scaleFromCenter(1.5, {areas: [box1], texts: [text1]});
             hover = true;
+            if (mouseIsDown() && !clickAction) {
+                clickAction = true;
+                await transition(overlay, false);
+                go("levelSelect");
+            }
         } else {
             scaleFromCenter(1, {areas: [box1], texts: [text1]});
         }
         if (box2.hasPoint(mouse)) {
             scaleFromCenter(1.5, {areas: [box2], texts: [text2]});
             hover = true;
+            if (mouseIsDown() && !clickAction) {
+                clickAction = true;
+                await transition(overlay, false);
+                go("about");
+            }
         } else {
             scaleFromCenter(1, {areas: [box2], texts: [text2]});
         }
         if (box3.hasPoint(mouse)) {
             scaleFromCenter(1.5, {areas: [box3], texts: [text3, text4]});
             hover = true;
+            if (mouseIsDown() && !clickAction) {
+                clickAction = true;
+                await transition(overlay, false);
+                go("levelEditor");
+            }
         } else {
             scaleFromCenter(1, {areas: [box3], texts: [text3, text4]});
         }
-        if (!hover) cursor("default");
+        if (hover) {
+            cursor("pointer");
+        } else {
+            cursor("default");
+        }
     });
 });
 
 scene("levelSelect", async () => {
-    let overlay = add([
-        rect(1000, 1000),
-        color(0, 0, 0),
-        opacity(1),
-        z(99)
-    ]);
+    let overlay = createOverlay();
 
     grid();
 
@@ -915,10 +922,7 @@ scene("levelSelect", async () => {
                 cursor("pointer");
                 if (mouseIsDown() && !clicked) {
                     clicked = true;
-                    for (let i = 0; i < 10; i++) {
-                        overlay.opacity += 0.1;
-                        await wait(0);
-                    }
+                    await transition(overlay, false);
                     music = play("music", {
                         loop: true
                     });
@@ -956,10 +960,12 @@ scene("levelSelect", async () => {
         if (!hover) cursor("default");
     });
 
-    for (let i = 0; i < 10; i++) {
-        overlay.opacity -= 0.1;
-        await wait(0);
-    }
+    await transition(overlay, true);
+});
+
+scene("levelEditor", () => {
+    createOverlay();
+    location.href = "/editor.html";
 });
 
 go("welcome");

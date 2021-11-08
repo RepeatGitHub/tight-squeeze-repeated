@@ -2,9 +2,17 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="63ba79d3-4a19-408f-9b21-57390f269be1" name="Changes" comment="Project restructuring">
-      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_10_29_2021_8_27_AM__Changes_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_10_29_2021_8_27_AM__Changes_.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/code/editor.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/public/editor.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/public/scripts/editor.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/jsLibraryMappings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/jsLibraryMappings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_10_29_2021_8_27_AM_[Changes]/shelved.patch" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_10_29_2021_8_27_AM__Changes_.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/tight-squeeze.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/tight-squeeze.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/code/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/code/main.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/public/scripts/main.js" beforeDir="false" afterPath="$PROJECT_DIR$/public/scripts/main.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -15,10 +23,11 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="HTML File" />
         <option value="CSS File" />
         <option value="JavaScript File" />
         <option value="tsconfig.json" />
+        <option value="HTML File" />
+        <option value="TypeScript File" />
       </list>
     </option>
   </component>
@@ -92,6 +101,7 @@
       <workItem from="1635510347285" duration="3228000" />
       <workItem from="1635517468986" duration="1189000" />
       <workItem from="1635856158093" duration="3882000" />
+      <workItem from="1636376727176" duration="4405000" />
     </task>
     <task id="LOCAL-00001" summary="Add project files">
       <created>1635510508333</created>

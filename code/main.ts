@@ -4,9 +4,7 @@ kaboom({
     width: 1000,
     height: 1000,
     background: [255, 255, 255],
-    font: "sinko",
-    //stretch: true,
-    //letterbox: true
+    font: "sinko"
 });
 
 let level = 1;

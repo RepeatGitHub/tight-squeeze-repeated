@@ -1,5 +1,5 @@
 import "bootstrap";
-import kaboom, {ColorComp, PosComp, SpriteComp} from "kaboom";
+import kaboom, {AreaComp, ColorComp, OutlineComp, PosComp, RectComp, SpriteComp} from "kaboom";
 
 kaboom({
     width: 1000,
@@ -153,13 +153,12 @@ scene("test", () => {
         add([
             pos(wall.dir === "vertical" ? wall.x * cellSize - 1 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 1),
             area({width: wall.dir === "vertical" ? 2 : wall.length * cellSize, height: wall.dir === "vertical" ? wall.length * cellSize : 2}),
-            solid(),
-            color(0, 0, 0)
+            solid()
         ]);
         add([
             rect(wall.dir === "vertical" ? 6 : wall.length * cellSize, wall.dir === "vertical" ? wall.length * cellSize : 6),
             pos(wall.dir === "vertical" ? wall.x * cellSize - 3 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 3),
-            color(0, 0, 0)
+            color(255, 0, 0)
         ])
     }
     for (let i = 0; i < currentLevelData.switchWalls.length; i++) {
@@ -276,16 +275,15 @@ scene("edit", async() => {
     // Add grid
     for (let i = 0; i < currentLevelData.size; i++) {
         for (let j = 0; j < currentLevelData.size; j++) {
-            add([
+            let grid: (AreaComp|OutlineComp|RectComp|SpriteComp|PosComp|ColorComp|string)[] = [
+                "grid",
+                rect(cellSize, cellSize),
                 sprite(`grid`, {width: cellSize, height: cellSize, quad: quad(i % 4 * 0.25, j % 4 * 0.25, 0.25, 0.25)}),
                 pos(i * cellSize, j * cellSize),
-                "grid"
-            ]);
-            add([
-               area({width: cellSize, height: cellSize}),
-               pos(i * cellSize, j * cellSize),
-               outline(5, {r: 0, g: 0, b: 0})
-            ]);
+                outline(5, {r: 0, g: 0, b: 0})
+            ];
+            if (i >= currentLevelData.goalX && i <= currentLevelData.goalX + 4 && j >= currentLevelData.goalY && j <= currentLevelData.goalY + 4) grid.push(color(100, 100, 100));
+            add(grid);
         }
     }
 
@@ -326,7 +324,7 @@ scene("edit", async() => {
             rect(wall.dir === "vertical" ? 6 : wall.length * cellSize, wall.dir === "vertical" ? wall.length * cellSize : 6),
             area({width: wall.dir === "vertical" ? 6 : wall.length * cellSize, height: wall.dir === "vertical" ? wall.length * cellSize : 6}),
             pos(wall.dir === "vertical" ? wall.x * cellSize - 3 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 3),
-            color(0, 0, 0)
+            color(255, 0, 0)
         ])
     }
     for (let i = 0; i < currentLevelData.switchWalls.length; i++) {
@@ -345,6 +343,22 @@ go("edit");
 document.querySelector("#test").addEventListener("click", () => {
     transition();
 });
+
+const fileInput: HTMLInputElement = document.querySelector("#level-file");
+
+document.querySelector("#open").addEventListener("click", () => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+       currentLevelData = JSON.parse(reader.result);
+       go("edit");
+    });
+    reader.readAsText(fileInput.files[0], "utf-8");
+    fileInput.value = null;
+});
+
+document.querySelector("#cancel").addEventListener("click", () => {
+    fileInput.value = null;
+})
 
 setInterval(() => {
     document.querySelector("#download").href = `data:application/json;charset=utf-8;base64,${btoa(JSON.stringify(currentLevelData))}`;

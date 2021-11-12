@@ -1,6 +1,6 @@
-import kaboom, {AreaComp, ColorComp, GameObj, OpacityComp, PosComp, ScaleComp, SpriteComp, TextComp} from "kaboom";
+import kaboom, {AreaComp, ColorComp, GameObj, OpacityComp, OriginComp, PosComp, ScaleComp, SpriteComp} from "kaboom";
 
-kaboom({
+const kbm = kaboom({
     width: 1000,
     height: 1000,
     background: [255, 255, 255],
@@ -47,21 +47,6 @@ type LevelInitInfo = {
     switchX?: number,
     switchY?: number,
     size: number
-}
-
-function scaleFromCenter(scale: number, objs: {areas?: GameObj<ScaleComp|PosComp|AreaComp>[], texts?: GameObj<ScaleComp|PosComp|TextComp>[]}) {
-    for (let area of objs.areas) {
-        if (area.scale.x === scale && area.scale.y === scale) continue;
-        area.moveBy(area.area.width * area.scale.x / 2, area.area.height * area.scale.y / 2);
-        area.scaleTo(scale);
-        area.moveBy(area.area.width * scale / -2, area.area.height * scale / -2);
-    }
-    for (let text of objs.texts) {
-        if (text.scale.x === scale && text.scale.y === scale) continue;
-        text.moveBy(text.width * text.scale.x / 2, text.height * text.scale.y / 2);
-        text.scaleTo(scale);
-        text.moveBy(text.width * scale / -2, text.height * scale / -2);
-    }
 }
 
 async function transition(overlay: GameObj<OpacityComp>, fadeIn: boolean, change = 0.1, count = 10, each: (i: number) => void = () => {}) {
@@ -783,52 +768,54 @@ scene("welcome", () => {
 
     let box1 = add([
         sprite("block", {width: 300, height: 300}),
-        pos(350, 350),
+        pos(500, 500),
         area({width: 300, height: 300}),
-        scale()
+        scale(),
+        kbm.origin("center")
     ]);
 
     let text1 = add([
         text("Play", {size: 60}),
-        pos(0, 0),
-        scale()
+        pos(500, 500),
+        scale(),
+        kbm.origin("center")
     ]);
-    text1.moveTo(500 - text1.width / 2, 500 - text1.height / 2);
 
     let box2 = add([
         sprite("block", {width: 200, height: 200}),
-        pos(75, 400),
+        pos(175, 500),
         area({width: 200, height: 200}),
-        scale()
+        scale(),
+        kbm.origin("center")
     ]);
 
     let text2 = add([
         text("About", {size: 35}),
-        pos(0, 0),
-        scale()
+        pos(175, 500),
+        scale(),
+        kbm.origin("center")
     ]);
-    text2.moveTo(175 - text2.width / 2, 500 - text2.height / 2);
 
     let box3 = add([
         sprite("block", {width: 200, height: 200}),
-        pos(725, 400),
+        pos(825, 500),
         area({width: 200, height: 200}),
-        scale()
+        scale(),
+        kbm.origin("center")
     ]);
 
     let text3 = add([
         text("Level", {size: 35}),
-        pos(0, 0),
-        scale()
+        pos(825, 500),
+        scale(),
+        kbm.origin(vec2(0, 1))
     ]);
     let text4 = add([
         text("Editor", {size: 35}),
-        pos(0, 0),
-        scale()
+        pos(825, 500),
+        scale(),
+        kbm.origin(vec2(0, -1))
     ]);
-    let height = text3.height + text4.height;
-    text3.moveTo(825 - text3.width / 2, 500 - height / 2);
-    text4.moveTo(825 - text4.width / 2, 500);
 
     let text5 = add([
         text("Tight Squeeze", {size: 80}),
@@ -842,7 +829,8 @@ scene("welcome", () => {
     action(async () => {
         let hover = false;
         if (box1.hasPoint(mouse)) {
-            scaleFromCenter(1.5, {areas: [box1], texts: [text1]});
+            box1.scaleTo(1.5);
+            text1.scaleTo(1.5);
             hover = true;
             if (mouseIsDown() && !clickAction) {
                 clickAction = true;
@@ -850,10 +838,12 @@ scene("welcome", () => {
                 go("levelSelect");
             }
         } else {
-            scaleFromCenter(1, {areas: [box1], texts: [text1]});
+            box1.scaleTo(1);
+            text1.scaleTo(1);
         }
         if (box2.hasPoint(mouse)) {
-            scaleFromCenter(1.5, {areas: [box2], texts: [text2]});
+            box2.scaleTo(1.5);
+            text2.scaleTo(1.5);
             hover = true;
             if (mouseIsDown() && !clickAction) {
                 clickAction = true;
@@ -861,10 +851,13 @@ scene("welcome", () => {
                 go("about");
             }
         } else {
-            scaleFromCenter(1, {areas: [box2], texts: [text2]});
+            box2.scaleTo(1);
+            text2.scaleTo(1);
         }
         if (box3.hasPoint(mouse)) {
-            scaleFromCenter(1.5, {areas: [box3], texts: [text3, text4]});
+            box3.scaleTo(1.5);
+            text3.scaleTo(1.5);
+            text4.scaleTo(1.5);
             hover = true;
             if (mouseIsDown() && !clickAction) {
                 clickAction = true;
@@ -872,7 +865,9 @@ scene("welcome", () => {
                 go("levelEditor");
             }
         } else {
-            scaleFromCenter(1, {areas: [box3], texts: [text3, text4]});
+            box3.scaleTo(1);
+            text3.scaleTo(1);
+            text4.scaleTo(1);
         }
         if (hover) {
             cursor("pointer");
@@ -892,10 +887,11 @@ scene("levelSelect", async () => {
 
     for (let i = 1; i <= 4; i++) {
         for (let j = 1; j <= 2; j++) { // only doing 2 rows for now
-            let boxArray: (SpriteComp|PosComp|ScaleComp|AreaComp|ColorComp|string)[] = [
+            let boxArray: (SpriteComp|PosComp|ScaleComp|AreaComp|ColorComp|OriginComp|string)[] = [
                 sprite("block", {width: 100, height: 100}),
-                pos(200 * i - 50, 250 * j),
+                pos(200 * i, 250 * j + 50),
                 scale(1),
+                kbm.origin("center"),
                 area({width: 100, height: 100})
             ];
             if (getData("currentLevel", 1) < i + (j - 1) * 4) {
@@ -907,16 +903,14 @@ scene("levelSelect", async () => {
             if (getData("currentLevel", 1) < i + (j - 1) * 4) continue;
             let txt = add([
                 text(String(i + (j - 1) * 4), {size: 40}),
-                pos(0, 0),
-                scale(1)
+                pos(200 * i, 250 * j + 50),
+                scale(1),
+                kbm.origin("center")
             ]);
-            txt.moveTo(200 * i - txt.width / 2, 250 * j + 50 - txt.height / 2);
             let clicked = false;
             boxHoverFunctions.set(box, async () => {
                 box.scaleTo(1.5);
-                box.moveTo(200 * i - 75, 250 * j - 25);
                 txt.scaleTo(1.5);
-                txt.moveTo(200 * i - txt.width * 0.75, 250 * j + 50 - txt.height * 0.75);
                 cursor("pointer");
                 if (mouseIsDown() && !clicked) {
                     clicked = true;
@@ -932,9 +926,7 @@ scene("levelSelect", async () => {
             });
             boxUnHoverFunctions.set(box, async () => {
                 box.scaleTo(1);
-                box.moveTo(200 * i - 50, 250 * j);
                 txt.scaleTo(1);
-                txt.moveTo(200 * i - txt.width / 2, 250 * j + 50 - txt.height / 2);
             });
         }
     }

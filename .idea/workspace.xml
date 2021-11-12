@@ -4,7 +4,6 @@
     <list default="true" id="63ba79d3-4a19-408f-9b21-57390f269be1" name="Changes" comment="Project restructuring">
       <change afterPath="$PROJECT_DIR$/public/scripts/editor.js" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/public/scripts/main.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/public/styles/editor.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/tight-squeeze.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/tight-squeeze.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/code/editor.ts" beforeDir="false" afterPath="$PROJECT_DIR$/code/editor.ts" afterDir="false" />
@@ -54,7 +53,7 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="javascript.nodejs.core.library.configured.version" value="16.13.0" />
+    <property name="javascript.nodejs.core.library.configured.version" value="17.1.0" />
     <property name="javascript.nodejs.core.library.typings.version" value="16.11.7" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/run.js" />
     <property name="list.type.of.created.stylesheet" value="CSS" />
@@ -99,6 +98,7 @@
       <workItem from="1635856158093" duration="3882000" />
       <workItem from="1636376727176" duration="4405000" />
       <workItem from="1636549926600" duration="4028000" />
+      <workItem from="1636723925251" duration="2751000" />
     </task>
     <task id="LOCAL-00001" summary="Add project files">
       <created>1635510508333</created>

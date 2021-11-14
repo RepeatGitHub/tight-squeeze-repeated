@@ -8,32 +8,22 @@
 </head>
 <body>
     <div id="editor-buttons" class="p-1">
-        <button type="button" class="btn btn-primary mb-1" data-bs-toggle="modal" data-bs-target="#selectLevel">Import Level</button><br>
-        <a role="button" type="button" class="btn btn-primary mb-4" id="download" download="level.json">Export Level</a><br>
+        <label for="level-file" role="button" class="btn btn-primary mb-1">Import Level</label><br>
+        <input class="d-none" type="file" id="level-file" accept="application/json">
+        <a role="button" class="btn btn-primary mb-4" id="download" download="level.json">Export Level</a><br>
         <button type="button" class="btn btn-primary mb-1" id="add-wall">Add Wall</button><br>
         <button type="button" class="btn btn-primary mb-1" id="add-wall-switch">Add Switch Wall</button><br>
         <button type="button" class="btn btn-primary mb-4" id="remove-wall">Remove Wall</button><br>
         <button type="button" class="btn btn-primary mb-1" id="add-switch">Add Switch</button><br>
         <button type="button" class="btn btn-primary mb-4" id="remove-switch">Remove Switch</button><br>
-        <button type="button" class="btn btn-primary" id="test">Test Level</button>
-    </div>
-    <div class="modal fade" id="selectLevel" tabindex="-1" aria-labelledby="selectLevelLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="selectLevelLabel">Import a Level</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <label for="level-file" class="form-label">Choose a Level File</label>
-                    <input class="form-control" type="file" id="level-file" accept="application/json">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancel">Cancel</button>
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="open">Open Level</button>
-                </div>
-            </div>
-        </div>
+        <label for="level-size">Level size:</label>
+        <select class="form-select mb-4" id="level-size" aria-label="Level size">
+            <option selected value="10">10x10</option>
+            <option value="16">16x16</option>
+            <option value="20">20x20</option>
+        </select>
+        <button type="button" class="btn btn-primary mb-1" id="test">Test Level</button><br>
+        <a role="button" class="btn btn-primary" href="/">Return to Game</a>
     </div>
     <script src="scripts/editor.js"></script>
 </body>

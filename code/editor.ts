@@ -1,12 +1,16 @@
 import "bootstrap";
-import kaboom, {AreaComp, ColorComp, OutlineComp, PosComp, RectComp, SpriteComp} from "kaboom";
+import kaboom, {ColorComp, GameObj, PosComp, SpriteComp} from "kaboom";
 
-kaboom({
+const kbm = kaboom({
     width: 1000,
     height: 1000,
     background: [0, 0, 0],
     font: "sinko"
 });
+
+const levelSizeInput: HTMLSelectElement = document.querySelector("#level-size");
+const addSwitchButton: HTMLButtonElement = document.querySelector("#add-switch");
+const removeSwitchButton: HTMLButtonElement = document.querySelector("#remove-switch");
 
 let mouse = vec2();
 let editing = true;
@@ -60,14 +64,15 @@ let currentLevelData: LevelInitInfo = {
 };
 
 function transition() {
+    let testButton: HTMLButtonElement = document.querySelector("#test");
     if (editing) {
+        testButton.innerText = "Edit Level";
+        document.querySelectorAll("#editor-buttons button:not(#test), #level-size").forEach((e: HTMLButtonElement | HTMLSelectElement) => e.disabled = true);
         go("test");
-        document.querySelector("#test").innerText = "Edit Level";
-        document.querySelectorAll("#editor-buttons button:not(#test)").forEach(e => e.disabled = true);
     } else {
+        testButton.innerText = "Test Level";
+        document.querySelectorAll("#editor-buttons button:not(#test), #level-size").forEach((e: HTMLButtonElement | HTMLSelectElement) => e.disabled = false);
         go("edit");
-        document.querySelector("#test").innerText = "Test Level";
-        document.querySelectorAll("#editor-buttons button:not(#test)").forEach(e => e.disabled = false);
     }
     editing = !editing;
 }
@@ -129,15 +134,6 @@ scene("test", () => {
         ])
     }
 
-    // Add player
-    const player = add([
-        sprite("player", {width: cellSize, height: cellSize, }),
-        area({width: cellSize - 2, height: cellSize - 2}),
-        solid(),
-        pos(currentLevelData.playerX * cellSize + 1, currentLevelData.playerY * cellSize + 1),
-        "player"
-    ]);
-
     // Add block
     const block = add([
         sprite("block", {width: cellSize * 5, height: cellSize * 5}),
@@ -145,6 +141,15 @@ scene("test", () => {
         solid(),
         pos(currentLevelData.blockX * cellSize + 1, currentLevelData.blockY * cellSize + 1),
         "block"
+    ]);
+
+    // Add player
+    const player = add([
+        sprite("player", {width: cellSize, height: cellSize, }),
+        area({width: cellSize - 2, height: cellSize - 2}),
+        solid(),
+        pos(currentLevelData.playerX * cellSize + 1, currentLevelData.playerY * cellSize + 1),
+        "player"
     ]);
 
     // Add walls
@@ -272,18 +277,19 @@ scene("edit", async() => {
     const cellSize = 1000 / currentLevelData.size;
     let switchObj;
 
+    levelSizeInput.value = currentLevelData.size.toString();
+
     // Add grid
     for (let i = 0; i < currentLevelData.size; i++) {
         for (let j = 0; j < currentLevelData.size; j++) {
-            let grid: (AreaComp|OutlineComp|RectComp|SpriteComp|PosComp|ColorComp|string)[] = [
+            add([
                 "grid",
                 rect(cellSize, cellSize),
                 sprite(`grid`, {width: cellSize, height: cellSize, quad: quad(i % 4 * 0.25, j % 4 * 0.25, 0.25, 0.25)}),
                 pos(i * cellSize, j * cellSize),
+                // @ts-ignore
                 outline(5, {r: 0, g: 0, b: 0})
-            ];
-            if (i >= currentLevelData.goalX && i <= currentLevelData.goalX + 4 && j >= currentLevelData.goalY && j <= currentLevelData.goalY + 4) grid.push(color(100, 100, 100));
-            add(grid);
+            ]);
         }
     }
 
@@ -291,31 +297,40 @@ scene("edit", async() => {
     const goal = add([
         pos(currentLevelData.goalX * cellSize, currentLevelData.goalY * cellSize),
         area({width: cellSize * 5, height: cellSize * 5}),
+        rect(cellSize * 5, cellSize * 5),
+        color(0, 0, 0),
+        opacity(0.6),
         "goal"
-    ]);
-
-    // Add switch
-    if (typeof currentLevelData.switchX === "number" && typeof currentLevelData.switchY === "number") {
-        switchObj = add([
-            sprite("switch", {width: cellSize, height: cellSize}),
-            pos(currentLevelData.switchX * cellSize, currentLevelData.switchY * cellSize),
-            area({width: cellSize, height: cellSize})
-        ]);
-    }
-
-    // Add player
-    const player = add([
-        sprite("player", {width: cellSize, height: cellSize, }),
-        area({width: cellSize - 2, height: cellSize - 2}),
-        pos(currentLevelData.playerX * cellSize + 1, currentLevelData.playerY * cellSize + 1)
     ]);
 
     // Add block
     const block = add([
         sprite("block", {width: cellSize * 5, height: cellSize * 5}),
         area({width: cellSize * 5 - 2, height: cellSize * 5 - 2}),
-        pos(currentLevelData.blockX * cellSize + 1, currentLevelData.blockY * cellSize + 1)
+        pos(currentLevelData.blockX * cellSize + 1, currentLevelData.blockY * cellSize + 1),
+        "block"
     ]);
+
+    // Add player
+    const player = add([
+        sprite("player", {width: cellSize, height: cellSize, }),
+        area({width: cellSize - 2, height: cellSize - 2}),
+        pos(currentLevelData.playerX * cellSize + 1, currentLevelData.playerY * cellSize + 1),
+        "player"
+    ]);
+
+    // Add switch
+    const hasSwitch = typeof currentLevelData.switchX === "number" && typeof currentLevelData.switchY === "number";
+    if (hasSwitch) {
+        switchObj = add([
+            sprite("switch", {width: cellSize, height: cellSize}),
+            pos(currentLevelData.switchX * cellSize, currentLevelData.switchY * cellSize),
+            area({width: cellSize, height: cellSize}),
+            "switch"
+        ]);
+    }
+    addSwitchButton.disabled = hasSwitch;
+    removeSwitchButton.disabled = !hasSwitch;
 
     // Add walls
     for (let i = 0; i < currentLevelData.walls.length; i++) {
@@ -336,6 +351,46 @@ scene("edit", async() => {
             color(0, 0, 255)
         ]);
     }
+
+    let moving: string = null, offset = vec2(0, 0);
+
+    action(() => {
+        if (moving) {
+            // @ts-ignore
+            const obj: GameObj<PosComp> = get(moving)[0];
+            if (!mouseIsDown()) {
+                if (moving === "player" || moving === "block") {
+                    let checkPos = obj.pos.add(cellSize / 2 - 1, cellSize / 2 - 1);
+                    obj.moveTo(checkPos.x - (checkPos.x % cellSize) + 1, checkPos.y - (checkPos.y % cellSize) + 1);
+                    currentLevelData[moving + "X"] = (obj.pos.x - 1) / cellSize;
+                    currentLevelData[moving + "Y"] = (obj.pos.y - 1) / cellSize;
+                } else if (moving === "goal" || moving === "switch") {
+                    let checkPos = obj.pos.add(cellSize / 2, cellSize / 2);
+                    obj.moveTo(checkPos.sub(checkPos.x % cellSize, checkPos.y % cellSize));
+                    currentLevelData[moving + "X"] = obj.pos.x / cellSize;
+                    currentLevelData[moving + "Y"] = obj.pos.y / cellSize;
+                }
+                moving = null;
+            } else {
+                get(moving)[0].pos = mouse.sub(offset);
+            }
+        }
+        if (!moving && mouseIsDown()) {
+            if (switchObj && switchObj.hasPoint(mouse)) {
+                moving = "switch";
+                offset = mouse.sub(switchObj.pos);
+            } else if (player.hasPoint(mouse)) {
+                moving = "player";
+                offset = mouse.sub(player.pos);
+            } else if (block.hasPoint(mouse)) {
+                moving = "block";
+                offset = mouse.sub(block.pos);
+            } else if (goal.hasPoint(mouse)) {
+                moving = "goal";
+                offset = mouse.sub(goal.pos);
+            }
+        }
+    });
 });
 
 go("edit");
@@ -345,21 +400,51 @@ document.querySelector("#test").addEventListener("click", () => {
 });
 
 const fileInput: HTMLInputElement = document.querySelector("#level-file");
-
-document.querySelector("#open").addEventListener("click", () => {
+fileInput.addEventListener("change", () => {
     const reader = new FileReader();
     reader.addEventListener("load", () => {
-       currentLevelData = JSON.parse(reader.result);
+        if (typeof reader.result === "string") {
+            currentLevelData = JSON.parse(reader.result);
+        }
        go("edit");
     });
     reader.readAsText(fileInput.files[0], "utf-8");
     fileInput.value = null;
 });
 
-document.querySelector("#cancel").addEventListener("click", () => {
-    fileInput.value = null;
-})
+levelSizeInput.addEventListener("change", () => {
+    currentLevelData.size = parseInt(levelSizeInput.value);
+    go("edit");
+});
+
+addSwitchButton.addEventListener("click", async () => {
+    addSwitchButton.disabled = true;
+    const cellSize = 1000 / currentLevelData.size;
+    let tempSwitch = add([
+        sprite("switch", {width: cellSize, height: cellSize}),
+        pos(),
+        kbm.origin("center")
+    ]);
+    const interval = setInterval(() => {
+        if (mouseIsDown()) {
+            clearInterval(interval);
+            currentLevelData.switchX = Math.floor(tempSwitch.pos.x / cellSize);
+            currentLevelData.switchY = Math.floor(tempSwitch.pos.y / cellSize);
+            tempSwitch.destroy();
+            go("edit");
+        } else {
+            tempSwitch.pos = mouse;
+        }
+    }, 0);
+});
+
+removeSwitchButton.addEventListener("click", () => {
+   delete currentLevelData.switchX;
+   delete currentLevelData.switchY;
+   go("edit");
+});
 
 setInterval(() => {
-    document.querySelector("#download").href = `data:application/json;charset=utf-8;base64,${btoa(JSON.stringify(currentLevelData))}`;
+    let downloadElement: HTMLAnchorElement = document.querySelector("#download");
+    downloadElement.href = `data:application/json;charset=utf-8;base64,${encodeURIComponent(btoa(JSON.stringify(currentLevelData)))}`;
 }, 0);

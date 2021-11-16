@@ -1,5 +1,5 @@
 import "bootstrap";
-import kaboom, {CircleComp, ColorComp, GameObj, OriginComp, PosComp, SpriteComp} from "kaboom";
+import kaboom, {AreaComp, CircleComp, ColorComp, GameObj, OriginComp, PosComp, SpriteComp} from "kaboom";
 
 const kbm = kaboom({
     width: 1000,
@@ -11,6 +11,9 @@ const kbm = kaboom({
 const levelSizeInput: HTMLSelectElement = document.querySelector("#level-size");
 const addSwitchButton: HTMLButtonElement = document.querySelector("#add-switch");
 const removeSwitchButton: HTMLButtonElement = document.querySelector("#remove-switch");
+const addWallButton: HTMLButtonElement = document.querySelector("#add-wall");
+const addSwitchWallButton: HTMLButtonElement = document.querySelector("#add-wall-switch");
+const removeWallButton: HTMLButtonElement = document.querySelector("#remove-wall");
 
 let mouse = vec2();
 let editing = true;
@@ -274,11 +277,25 @@ scene("test", () => {
 });
 
 let addingWall = false;
+let removingWall = false;
 let wallType = 0;
 let state = 0;
 let point1: GameObj<PosComp|CircleComp|OriginComp|ColorComp>, point2: GameObj<PosComp|CircleComp|OriginComp|ColorComp>;
-const addWallButton: HTMLButtonElement = document.querySelector("#add-wall");
-const addSwitchWallButton: HTMLButtonElement = document.querySelector("#add-wall-switch");
+
+function disableButtons() {
+    addWallButton.disabled = true;
+    addSwitchWallButton.disabled = true;
+    removeWallButton.disabled = true;
+    addSwitchButton.disabled = true;
+    removeSwitchButton.disabled = true;
+    levelSizeInput.disabled = true;
+}
+
+function enableButtons() {
+    addWallButton.disabled = false;
+    addSwitchWallButton.disabled = false;
+    levelSizeInput.disabled = false;
+}
 
 scene("edit", async() => {
     const cellSize = 1000 / currentLevelData.size;
@@ -343,20 +360,28 @@ scene("edit", async() => {
         let wall = currentLevelData.walls[i];
         add([
             rect(wall.dir === "vertical" ? 6 : wall.length * cellSize, wall.dir === "vertical" ? wall.length * cellSize : 6),
-            area({width: wall.dir === "vertical" ? 6 : wall.length * cellSize, height: wall.dir === "vertical" ? wall.length * cellSize : 6}),
-            pos(wall.dir === "vertical" ? wall.x * cellSize - 3 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 3),
-            color(0, 255, 0)
+            area({width: wall.dir === "vertical" ? cellSize / 2 : wall.length * cellSize, height: wall.dir === "vertical" ? wall.length * cellSize : cellSize / 2}),
+            pos(wall.x * cellSize, wall.y * cellSize),
+            color(0, 255, 0),
+            kbm.origin(wall.dir === "vertical" ? "top" : "left"),
+            "wall",
+            {wall}
         ])
     }
     for (let i = 0; i < currentLevelData.switchWalls.length; i++) {
         let wall = currentLevelData.switchWalls[i];
         add([
             rect(wall.dir === "vertical" ? 6 : wall.length * cellSize, wall.dir === "vertical" ? wall.length * cellSize : 6),
-            area({width: wall.dir === "vertical" ? 6 : wall.length * cellSize, height: wall.dir === "vertical" ? wall.length * cellSize : 6}),
-            pos(wall.dir === "vertical" ? wall.x * cellSize - 3 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 3),
-            color(0, 0, 255)
+            area({width: wall.dir === "vertical" ? cellSize / 2 : wall.length * cellSize, height: wall.dir === "vertical" ? wall.length * cellSize : cellSize / 2}),
+            pos(wall.x * cellSize, wall.y * cellSize),
+            color(0, 0, 255),
+            kbm.origin(wall.dir === "vertical" ? "top" : "left"),
+            "switchWall",
+            {wall}
         ]);
     }
+
+    removeWallButton.disabled = currentLevelData.walls.length + currentLevelData.switchWalls.length === 0;
 
     let moving: string = null, offset = vec2(0, 0);
 
@@ -368,11 +393,15 @@ scene("edit", async() => {
                 if (moving === "player" || moving === "block") {
                     let checkPos = obj.pos.add(cellSize / 2 - 1, cellSize / 2 - 1);
                     obj.moveTo(checkPos.x - (checkPos.x % cellSize) + 1, checkPos.y - (checkPos.y % cellSize) + 1);
+                    if (obj.pos.x / cellSize > currentLevelData.size - (moving === "block" ? 5 : 1)) obj.pos.x = (currentLevelData.size - (moving === "block" ? 5 : 1)) * cellSize;
+                    if (obj.pos.y / cellSize > currentLevelData.size - (moving === "block" ? 5 : 1)) obj.pos.y = (currentLevelData.size - (moving === "block" ? 5 : 1)) * cellSize;
                     currentLevelData[moving + "X"] = (obj.pos.x - 1) / cellSize;
                     currentLevelData[moving + "Y"] = (obj.pos.y - 1) / cellSize;
                 } else if (moving === "goal" || moving === "switch") {
                     let checkPos = obj.pos.add(cellSize / 2, cellSize / 2);
                     obj.moveTo(checkPos.sub(checkPos.x % cellSize, checkPos.y % cellSize));
+                    if (obj.pos.x / cellSize > currentLevelData.size - (moving === "goal" ? 5 : 1)) obj.pos.x = (currentLevelData.size - (moving === "goal" ? 5 : 1)) * cellSize;
+                    if (obj.pos.y / cellSize > currentLevelData.size - (moving === "goal" ? 5 : 1)) obj.pos.y = (currentLevelData.size - (moving === "goal" ? 5 : 1)) * cellSize;
                     currentLevelData[moving + "X"] = obj.pos.x / cellSize;
                     currentLevelData[moving + "Y"] = obj.pos.y / cellSize;
                 }
@@ -396,6 +425,25 @@ scene("edit", async() => {
                 offset = mouse.sub(goal.pos);
             }
         }
+        if (removingWall) {
+            // @ts-ignore
+            let walls: GameObj<AreaComp|ColorComp| { wall: WallInitInfo }>[] = get("wall");
+            walls.forEach(wall => wall.color = rgb(0, 255, 0));
+            // @ts-ignore
+            let switchWalls: GameObj<AreaComp|ColorComp| { wall: WallInitInfo }>[] = get("switchWall");
+            switchWalls.forEach(wall => wall.color = rgb(0, 0, 255));
+            let wall = walls.find((wall: GameObj<AreaComp>) => wall.hasPoint(mouse)) || switchWalls.find((wall: GameObj<AreaComp>) => wall.hasPoint(mouse));
+            if (wall) {
+                wall.color = rgb(255, 0, 0);
+                if (mouseIsClicked()) {
+                    removingWall = false;
+                    if (currentLevelData.walls.indexOf(wall.wall) > -1) currentLevelData.walls.splice(currentLevelData.walls.indexOf(wall.wall), 1);
+                    if (currentLevelData.switchWalls.indexOf(wall.wall) > -1) currentLevelData.switchWalls.splice(currentLevelData.switchWalls.indexOf(wall.wall), 1);
+                    enableButtons();
+                    go("edit");
+                }
+            }
+        }
     });
     onDraw(() => {
         if (addingWall) {
@@ -415,7 +463,7 @@ scene("edit", async() => {
                     point1.destroy();
                     point2.destroy();
                     addingWall = false;
-                    addWallButton.disabled = false;
+                    enableButtons();
                     go("edit");
                 }
             } else if (state == 0) {
@@ -440,7 +488,7 @@ scene("edit", async() => {
 });
 
 addWallButton.addEventListener("click", () => {
-    addWallButton.disabled = true;
+    disableButtons();
     const cellSize = 1000 / currentLevelData.size;
     point1 = add([
         circle(cellSize / 4),
@@ -461,7 +509,7 @@ addWallButton.addEventListener("click", () => {
 });
 
 addSwitchWallButton.addEventListener("click", () => {
-    addSwitchWallButton.disabled = true;
+    disableButtons();
     const cellSize = 1000 / currentLevelData.size;
     point1 = add([
         circle(cellSize / 4),
@@ -479,6 +527,11 @@ addSwitchWallButton.addEventListener("click", () => {
     state = 0;
     wallType = 1;
     addingWall = true;
+});
+
+removeWallButton.addEventListener("click", () => {
+   disableButtons();
+   removingWall = true;
 });
 
 go("edit");
@@ -506,7 +559,7 @@ levelSizeInput.addEventListener("change", () => {
 });
 
 addSwitchButton.addEventListener("click", async () => {
-    addSwitchButton.disabled = true;
+    disableButtons();
     const cellSize = 1000 / currentLevelData.size;
     let tempSwitch = add([
         sprite("switch", {width: cellSize, height: cellSize}),
@@ -519,6 +572,7 @@ addSwitchButton.addEventListener("click", async () => {
             currentLevelData.switchX = Math.floor(tempSwitch.pos.x / cellSize);
             currentLevelData.switchY = Math.floor(tempSwitch.pos.y / cellSize);
             tempSwitch.destroy();
+            enableButtons();
             go("edit");
         } else {
             tempSwitch.pos = mouse;

@@ -1,4 +1,5 @@
 import kaboom, {AreaComp, ColorComp, GameObj, OpacityComp, OriginComp, PosComp, ScaleComp, SpriteComp} from "kaboom";
+import Global from "./global";
 
 const kbm = kaboom({
     width: 1000,
@@ -13,27 +14,9 @@ let moving = false;
 let music;
 let mouse = vec2();
 
-onmousemove = e => {
-    mouse.x = Math.floor((e.x - canvas.getBoundingClientRect().x) / canvas.getBoundingClientRect().width * 1000);
-    mouse.y = Math.floor((e.y - canvas.getBoundingClientRect().y) / canvas.getBoundingClientRect().height * 1000);
-};
+Global.init(mouse);
 
-loadSound("music", "sounds/music.mp3").catch(console.error);
-loadSound("finish", "sounds/finish.wav").catch(console.error);
-loadSound("switch", "sounds/switch.wav").catch(console.error);
-loadSound("move", "sounds/move.wav").catch(console.error);
 
-loadSprite("player", "sprites/player.png").catch(console.error);
-loadSprite("block", "sprites/block.png").catch(console.error);
-loadSprite("grid", "sprites/grid.png").catch(console.error);
-loadSprite("switch", "sprites/switch.png").catch(console.error);
-
-type WallInitInfo = {
-    x: number,
-    y: number,
-    dir: "vertical" | "horizontal",
-    length: number
-}
 
 type LevelInitInfo = {
     playerX: number,

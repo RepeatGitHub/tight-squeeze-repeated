@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="63ba79d3-4a19-408f-9b21-57390f269be1" name="Changes" comment="Project restructuring">
+    <list default="true" id="63ba79d3-4a19-408f-9b21-57390f269be1" name="Changes" comment="Level Editor is Complete!">
+      <change afterPath="$PROJECT_DIR$/code/global.ts" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/public/scripts/editor.js" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/public/scripts/main.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/code/editor.ts" beforeDir="false" afterPath="$PROJECT_DIR$/code/editor.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/code/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/code/main.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,8 +20,8 @@
         <option value="JavaScript File" />
         <option value="tsconfig.json" />
         <option value="HTML File" />
-        <option value="TypeScript File" />
         <option value="CSS File" />
+        <option value="TypeScript File" />
       </list>
     </option>
   </component>
@@ -29,6 +30,11 @@
       <list>
         <option value="Matthew Weir &lt;matthew.weir@mcvts.org&gt;" />
       </list>
+    </option>
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
@@ -39,9 +45,6 @@
       <filtered-out-file-type name="TAG" />
       <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
     </file-type-list>
-  </component>
-  <component name="GithubDefaultAccount">
-    <option name="defaultAccountId" value="6d2c4d7b-6e1a-405e-ad7c-a8b363c51db3" />
   </component>
   <component name="ProjectId" id="20BG0PVOTxH7gLSIKTpPl8SuVV0" />
   <component name="ProjectLevelVcsManager">
@@ -64,7 +67,7 @@
     <property name="list.type.of.created.stylesheet" value="CSS" />
     <property name="nodejs_interpreter_path" value="node" />
     <property name="nodejs_package_manager_path" value="npm" />
-    <property name="settings.editor.selected.configurable" value="discord-project" />
+    <property name="settings.editor.selected.configurable" value="org.jetbrains.plugins.github.ui.GithubSettingsConfigurable" />
     <property name="ts.external.directory.path" value="C:\Users\compsci\AppData\Local\JetBrains\Toolbox\apps\WebStorm\ch-0\212.5457.55\plugins\JavaScriptLanguage\jsLanguageServicesImpl\external" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
@@ -106,7 +109,7 @@
       <workItem from="1636723925251" duration="2751000" />
       <workItem from="1636915091732" duration="8988000" />
       <workItem from="1637024117229" duration="6237000" />
-      <workItem from="1637067947057" duration="3145000" />
+      <workItem from="1637067947057" duration="4205000" />
     </task>
     <task id="LOCAL-00001" summary="Add project files">
       <created>1635510508333</created>
@@ -136,7 +139,14 @@
       <option name="project" value="LOCAL" />
       <updated>1636924544652</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Level Editor is Complete!">
+      <created>1637071898771</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1637071898771</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -160,7 +170,8 @@
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="Add project files" />
     <MESSAGE value="Project restructuring" />
-    <option name="LAST_COMMIT_MESSAGE" value="Project restructuring" />
+    <MESSAGE value="Level Editor is Complete!" />
+    <option name="LAST_COMMIT_MESSAGE" value="Level Editor is Complete!" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

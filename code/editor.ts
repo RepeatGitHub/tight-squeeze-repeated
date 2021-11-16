@@ -1,5 +1,5 @@
 import "bootstrap";
-import kaboom, {ColorComp, GameObj, PosComp, SpriteComp} from "kaboom";
+import kaboom, {CircleComp, ColorComp, GameObj, OriginComp, PosComp, SpriteComp} from "kaboom";
 
 const kbm = kaboom({
     width: 1000,
@@ -163,7 +163,7 @@ scene("test", () => {
         add([
             rect(wall.dir === "vertical" ? 6 : wall.length * cellSize, wall.dir === "vertical" ? wall.length * cellSize : 6),
             pos(wall.dir === "vertical" ? wall.x * cellSize - 3 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 3),
-            color(255, 0, 0)
+            color(0, 255, 0)
         ])
     }
     for (let i = 0; i < currentLevelData.switchWalls.length; i++) {
@@ -273,6 +273,13 @@ scene("test", () => {
     })
 });
 
+let addingWall = false;
+let wallType = 0;
+let state = 0;
+let point1: GameObj<PosComp|CircleComp|OriginComp|ColorComp>, point2: GameObj<PosComp|CircleComp|OriginComp|ColorComp>;
+const addWallButton: HTMLButtonElement = document.querySelector("#add-wall");
+const addSwitchWallButton: HTMLButtonElement = document.querySelector("#add-wall-switch");
+
 scene("edit", async() => {
     const cellSize = 1000 / currentLevelData.size;
     let switchObj;
@@ -287,8 +294,7 @@ scene("edit", async() => {
                 rect(cellSize, cellSize),
                 sprite(`grid`, {width: cellSize, height: cellSize, quad: quad(i % 4 * 0.25, j % 4 * 0.25, 0.25, 0.25)}),
                 pos(i * cellSize, j * cellSize),
-                // @ts-ignore
-                outline(5, {r: 0, g: 0, b: 0})
+                outline(5, rgb(0, 0, 0))
             ]);
         }
     }
@@ -339,7 +345,7 @@ scene("edit", async() => {
             rect(wall.dir === "vertical" ? 6 : wall.length * cellSize, wall.dir === "vertical" ? wall.length * cellSize : 6),
             area({width: wall.dir === "vertical" ? 6 : wall.length * cellSize, height: wall.dir === "vertical" ? wall.length * cellSize : 6}),
             pos(wall.dir === "vertical" ? wall.x * cellSize - 3 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 3),
-            color(255, 0, 0)
+            color(0, 255, 0)
         ])
     }
     for (let i = 0; i < currentLevelData.switchWalls.length; i++) {
@@ -391,6 +397,88 @@ scene("edit", async() => {
             }
         }
     });
+    onDraw(() => {
+        if (addingWall) {
+            if (mouseIsClicked()) {
+                state++;
+                if (state >= 2) {
+                    if (point1.pos.x !== point2.pos.x || point1.pos.y !== point2.pos.y) {
+                        let dir: "vertical" | "horizontal" = point1.pos.x === point2.pos.x ? "vertical" : "horizontal";
+                        let points = dir === "vertical" ? (point1.pos.y < point2.pos.y ? [point1, point2] : [point2, point1]) : (point1.pos.x < point2.pos.x ? [point1, point2] : [point2, point1]);
+                        currentLevelData[wallType === 0 ? "walls" : "switchWalls"].push({
+                            x: points[0].pos.x / cellSize,
+                            y: points[0].pos.y / cellSize,
+                            dir,
+                            length: (dir === "vertical" ? points[1].pos.y - points[0].pos.y : points[1].pos.x - points[0].pos.x) / cellSize
+                        });
+                    }
+                    point1.destroy();
+                    point2.destroy();
+                    addingWall = false;
+                    addWallButton.disabled = false;
+                    go("edit");
+                }
+            } else if (state == 0) {
+                point1.moveTo(Math.round(mouse.x / cellSize) * cellSize, Math.round(mouse.y / cellSize) * cellSize);
+            } else if (state == 1) {
+                point2.hidden = false;
+                point2.moveTo(Math.round(mouse.x / cellSize) * cellSize, Math.round(mouse.y / cellSize) * cellSize);
+                if (Math.abs(point1.pos.x - point2.pos.x) >= Math.abs(point1.pos.y - point2.pos.y)) {
+                    point2.pos.y = point1.pos.y;
+                } else {
+                    point2.pos.x = point1.pos.x;
+                }
+                drawLine({
+                    p1: point1.pos,
+                    p2: point2.pos,
+                    width: 5,
+                    color: rgb(0, wallType === 0 ? 255 : 0, wallType === 0 ? 0 : 255)
+                });
+            }
+        }
+    });
+});
+
+addWallButton.addEventListener("click", () => {
+    addWallButton.disabled = true;
+    const cellSize = 1000 / currentLevelData.size;
+    point1 = add([
+        circle(cellSize / 4),
+        kbm.origin("center"),
+        pos(),
+        color(0, 255, 0)
+    ]);
+    point2 = add([
+        circle(cellSize / 4),
+        kbm.origin("center"),
+        pos(),
+        color(0, 255, 0)
+    ]);
+    point2.hidden = true;
+    state = 0;
+    wallType = 0;
+    addingWall = true;
+});
+
+addSwitchWallButton.addEventListener("click", () => {
+    addSwitchWallButton.disabled = true;
+    const cellSize = 1000 / currentLevelData.size;
+    point1 = add([
+        circle(cellSize / 4),
+        kbm.origin("center"),
+        pos(),
+        color(0, 0, 255)
+    ]);
+    point2 = add([
+        circle(cellSize / 4),
+        kbm.origin("center"),
+        pos(),
+        color(0, 0, 255)
+    ]);
+    point2.hidden = true;
+    state = 0;
+    wallType = 1;
+    addingWall = true;
 });
 
 go("edit");
@@ -439,9 +527,9 @@ addSwitchButton.addEventListener("click", async () => {
 });
 
 removeSwitchButton.addEventListener("click", () => {
-   delete currentLevelData.switchX;
-   delete currentLevelData.switchY;
-   go("edit");
+    delete currentLevelData.switchX;
+    delete currentLevelData.switchY;
+    go("edit");
 });
 
 setInterval(() => {

@@ -41,6 +41,6 @@ jobs:
         git commit -m "GitHub Pages"
         git branch gh-pages
         header=$(echo -n "ad-m:${GH_TOKEN}" | base64)
-        git -c http.extraheader="AUTHORIZATION: basic $header" push -u origin gh-pages
+        git -c http.extraheader="AUTHORIZATION: basic $header" --force push -u origin gh-pages
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

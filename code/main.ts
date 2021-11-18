@@ -1,4 +1,14 @@
 import kaboom, {AreaComp, ColorComp, GameObj, OpacityComp, OriginComp, PosComp, ScaleComp, SpriteComp} from "kaboom";
+import Global, {Level, LevelInitInfo} from "./global";
+
+import level1 from "../levels/level1.json";
+import level2 from "../levels/level2.json";
+import level3 from "../levels/level3.json";
+import level4 from "../levels/level4.json";
+import level5 from "../levels/level5.json";
+import level6 from "../levels/level6.json";
+import level7 from "../levels/level7.json";
+import level8 from "../levels/level8.json";
 
 const kbm = kaboom({
     width: 1000,
@@ -9,45 +19,10 @@ const kbm = kaboom({
 
 let level = 1;
 let hasWon = false;
-let moving = false;
 let music;
 let mouse = vec2();
 
-onmousemove = e => {
-    mouse.x = Math.floor((e.x - canvas.getBoundingClientRect().x) / canvas.getBoundingClientRect().width * 1000);
-    mouse.y = Math.floor((e.y - canvas.getBoundingClientRect().y) / canvas.getBoundingClientRect().height * 1000);
-};
-
-loadSound("music", "sounds/music.mp3").catch(console.error);
-loadSound("finish", "sounds/finish.wav").catch(console.error);
-loadSound("switch", "sounds/switch.wav").catch(console.error);
-loadSound("move", "sounds/move.wav").catch(console.error);
-
-loadSprite("player", "sprites/player.png").catch(console.error);
-loadSprite("block", "sprites/block.png").catch(console.error);
-loadSprite("grid", "sprites/grid.png").catch(console.error);
-loadSprite("switch", "sprites/switch.png").catch(console.error);
-
-type WallInitInfo = {
-    x: number,
-    y: number,
-    dir: "vertical" | "horizontal",
-    length: number
-}
-
-type LevelInitInfo = {
-    playerX: number,
-    playerY: number,
-    blockX: number,
-    blockY: number,
-    goalX: number,
-    goalY: number,
-    walls: WallInitInfo[],
-    switchWalls: WallInitInfo[],
-    switchX?: number,
-    switchY?: number,
-    size: number
-}
+Global.init(mouse);
 
 async function transition(overlay: GameObj<OpacityComp>, fadeIn: boolean, change = 0.1, count = 10, each: (i: number) => void = () => {}) {
     for (let i = 0; i < count; i++) {
@@ -66,190 +41,15 @@ function createOverlay(defaultOpacity = 1) {
     ]);
 }
 
-async function addLevel(options: LevelInitInfo = {
-    playerX: 0,
-    playerY: 3,
-    blockX: 3,
-    blockY: 3,
-    goalX: 5,
-    goalY: 5,
-    walls: [{
-        x: 0,
-        y: 2,
-        dir: "horizontal",
-        length: 10
-    }],
-    switchWalls: [],
-    size: 10
-}) {
-    const cellSize = 1000 / options.size;
-    let switchObj;
-
-    // Add grid
-    for (let i = 0; i < options.size; i++) {
-        for (let j = 0; j < options.size; j++) {
-            let grid: (SpriteComp|PosComp|ColorComp|string)[] = [
-                sprite(`grid`, {width: cellSize, height: cellSize, quad: quad(i % 4 * 0.25, j % 4 * 0.25, 0.25, 0.25)}),
-                pos(i * cellSize, j * cellSize),
-                "grid"
-            ];
-            if (i >= options.goalX && i <= options.goalX + 4 && j >= options.goalY && j <= options.goalY + 4) grid.push(color(100, 100, 100));
-            add(grid);
-        }
-    }
-
-    // Add edges
-    add([
-        pos(0, 0),
-        area({width: 1, height: 1000}),
-        solid()
-    ]);
-    add([
-        pos(999, 0),
-        area({width: 1, height: 1000}),
-        solid()
-    ]);
-    add([
-        pos(0, 0),
-        area({width: 1000, height: 1}),
-        solid()
-    ]);
-    add([
-        pos(0, 999),
-        area({width: 1000, height: 1}),
-        solid()
-    ]);
-
-    // Add goal
-    const goal = add([
-        pos(options.goalX * cellSize, options.goalY * cellSize),
-        area({width: cellSize * 5, height: cellSize * 5}),
-        "goal"
-    ]);
-
-    // Add switch
-    if (typeof options.switchX === "number" && typeof options.switchY === "number") {
-        switchObj = add([
-            sprite("switch", {width: cellSize, height: cellSize}),
-            pos(options.switchX * cellSize, options.switchY * cellSize),
-            area({width: cellSize, height: cellSize})
-        ])
-    }
-
-    // Add player
-    const player = add([
-        sprite("player", {width: cellSize, height: cellSize, }),
-        area({width: cellSize - 2, height: cellSize - 2}),
-        solid(),
-        pos(options.playerX * cellSize + 1, options.playerY * cellSize + 1),
-        "player"
-    ]);
-
-    // Add block
-    const block = add([
-        sprite("block", {width: cellSize * 5, height: cellSize * 5}),
-        area({width: cellSize * 5 - 2, height: cellSize * 5 - 2}),
-        solid(),
-        pos(options.blockX * cellSize + 1, options.blockY * cellSize + 1),
-        "block"
-    ]);
-
-    // Add walls
-    for (let i = 0; i < options.walls.length; i++) {
-        let wall = options.walls[i];
-        add([
-            pos(wall.dir === "vertical" ? wall.x * cellSize - 1 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 1),
-            area({width: wall.dir === "vertical" ? 2 : wall.length * cellSize, height: wall.dir === "vertical" ? wall.length * cellSize : 2}),
-            solid(),
-            color(0, 0, 0)
-        ]);
-        add([
-            rect(wall.dir === "vertical" ? 6 : wall.length * cellSize, wall.dir === "vertical" ? wall.length * cellSize : 6),
-            pos(wall.dir === "vertical" ? wall.x * cellSize - 3 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 3),
-            color(0, 0, 0)
-        ])
-    }
-    for (let i = 0; i < options.switchWalls.length; i++) {
-        let wall = options.switchWalls[i];
-        add([
-            pos(wall.dir === "vertical" ? wall.x * cellSize - 1 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 1),
-            area({width: wall.dir === "vertical" ? 2 : wall.length * cellSize, height: wall.dir === "vertical" ? wall.length * cellSize : 2}),
-            solid(),
-            color(0, 0, 255),
-            "switchWallCollision"
-        ]);
-        add([
-            rect(wall.dir === "vertical" ? 6 : wall.length * cellSize, wall.dir === "vertical" ? wall.length * cellSize : 6),
-            pos(wall.dir === "vertical" ? wall.x * cellSize - 3 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 3),
-            color(0, 0, 255),
-            opacity(1),
-            "switchWallModel"
-        ]);
-    }
-
-    // Directional movement
-    keyPress(["left", "a"], async () => {
-        if (hasWon || moving) return;
-        moving = true;
-        let sound = play("move");
-        for (let i = 0; i < 4; i++) {
-            if (player.pos.x === block.pos.x + cellSize * 5 && player.pos.y === block.pos.y + cellSize * 2 ) block.moveBy(cellSize / -4, 0);
-            player.moveBy(cellSize / -4, 0);
-            await wait(0);
-        }
-        player.pos.x++;
-        if (player.pos.x % cellSize !== 1) player.pos.x = player.pos.x - player.pos.x % cellSize + 1;
-        sound.stop();
-        moving = false;
-    });
-
-    keyPress(["right", "d"], async () => {
-        if (hasWon || moving) return;
-        moving = true;
-        let sound = play("move");
-        for (let i = 0; i < 4; i++) {
-            if (player.pos.x === block.pos.x - cellSize && player.pos.y === block.pos.y + cellSize * 2) block.moveBy(cellSize / 4, 0);
-            player.moveBy(cellSize / 4, 0);
-            await wait(0);
-        }
-        if (player.pos.x % cellSize !== 1) player.pos.x = player.pos.x - player.pos.x % cellSize + 1;
-        sound.stop();
-        moving = false;
-    });
-
-    keyPress(["up", "w"], async () => {
-        if (hasWon || moving) return;
-        moving = true;
-        let sound = play("move");
-        for (let i = 0; i < 4; i++) {
-            if (player.pos.x === block.pos.x + cellSize * 2 && player.pos.y === block.pos.y + cellSize * 5) block.moveBy(0, cellSize / -4);
-            player.moveBy(0, cellSize / -4);
-            await wait(0);
-        }
-        player.pos.y++;
-        if (player.pos.y % cellSize !== 1) player.pos.y = player.pos.y - player.pos.y % cellSize + 1;
-        sound.stop();
-        moving = false;
-    });
-
-    keyPress(["down", "s"], async () => {
-        if (hasWon || moving) return;
-        moving = true;
-        let sound = play("move");
-        for (let i = 0; i < 4; i++) {
-            if (player.pos.x === block.pos.x + cellSize * 2 && player.pos.y === block.pos.y - cellSize) block.moveBy(0, cellSize / 4);
-            player.moveBy(0, cellSize / 4);
-            await wait(0);
-        }
-        if (player.pos.y % cellSize !== 1) player.pos.y = player.pos.y - player.pos.y % cellSize + 1;
-        sound.stop();
-        moving = false;
-    });
-
+async function addLevel(options: LevelInitInfo) {
+    const overlay = createOverlay();
     let paused = false;
 
-    // Reset on "R"
-    keyPress("r", async () => {
+    const currentLevel = new Level(options, async () => {
+        await transition(overlay, false);
+        go(`level${++level}`);
+        if (getData("currentLevel", 1) < level) setData("currentLevel", level);
+    }, async () => {
         if (paused) {
             paused = false;
             hasWon = false;
@@ -265,10 +65,6 @@ async function addLevel(options: LevelInitInfo = {
             go(`level${level}`);
         }
     });
-
-    if (switchObj) switchObj.collides("block", () => {
-        play("switch");
-    })
 
     let paused1 = add([
         text("Paused", {size: 100}),
@@ -302,12 +98,12 @@ async function addLevel(options: LevelInitInfo = {
                 paused3.opacity -= 0.2;
                 music.volume(0.5 + (i + 1) * 0.1);
             });
-            hasWon = false;
+            currentLevel.hasWon = false;
             paused = false;
         } else {
             if (hasWon) return;
             paused = true;
-            hasWon = true;
+            currentLevel.hasWon = true;
             await transition(overlay, false, 0.1, 5, i => {
                 paused1.opacity += 0.2;
                 paused2.opacity += 0.2;
@@ -316,31 +112,6 @@ async function addLevel(options: LevelInitInfo = {
             });
         }
     });
-
-    let overlay = createOverlay();
-
-    action(async () => {
-        if (goal.pos.x === block.pos.x - 1 && goal.pos.y === block.pos.y - 1 && !hasWon) {
-            hasWon = true;
-            every("grid", i => i.color = {r: 255, g: 255, b: 0});
-            play("finish");
-            await wait(3);
-            level++;
-            await transition(overlay, false);
-            go(`level${level}`);
-            if (getData("currentLevel", 1) < level) setData("currentLevel", level);
-            hasWon = false;
-        }
-        if (switchObj) {
-            if (block.isTouching(switchObj)) {
-                every("switchWallCollision", i => i.solid = false);
-                every("switchWallModel", i => i.opacity = 0.5);
-            } else {
-                every("switchWallCollision", i => i.solid = true);
-                every("switchWallModel", i => i.opacity = 1);
-            }
-        }
-    })
 
     await transition(overlay, true);
 }
@@ -351,7 +122,7 @@ scene("level1", async () => {
         pos(20, 15),
         z(98)
     ]);
-    await addLevel();
+    await addLevel(level1);
 })
 
 scene("level2", async () => {
@@ -360,204 +131,19 @@ scene("level2", async () => {
         pos(20, 15),
         z(98)
     ]);
-    await addLevel({
-        playerX: 0,
-        playerY: 2,
-        blockX: 3,
-        blockY: 3,
-        goalX: 5,
-        goalY: 5,
-        walls: [{
-            x: 9,
-            y: 2,
-            dir: "vertical",
-            length: 3
-        }, {
-            x: 1,
-            y: 9,
-            dir: "horizontal",
-            length: 3
-        }, {
-            x: 0,
-            y: 1,
-            dir: "horizontal",
-            length: 10
-        }, {
-            x: 1,
-            y: 9,
-            dir: "horizontal",
-            length: 3
-        }],
-        switchWalls: [],
-        size: 10
-    });
+    await addLevel(level2);
 });
 
 scene("level3", async () => {
-    await addLevel({
-        playerX: 0,
-        playerY: 4,
-        blockX: 1,
-        blockY: 1,
-        goalX: 5,
-        goalY: 5,
-        walls: [{
-            x: 7,
-            y: 5,
-            dir: "horizontal",
-            length: 3
-        }, {
-            x: 2,
-            y: 0,
-            dir: "vertical",
-            length: 1
-        }, {
-            x: 4,
-            y: 1,
-            dir: "horizontal",
-            length: 3
-        }],
-        switchWalls: [],
-        size: 10
-    });
+    await addLevel(level3);
 });
 
 scene("level4", async () => {
-    await addLevel({
-        playerX: 0,
-        playerY: 4,
-        blockX: 1,
-        blockY: 1,
-        goalX: 10,
-        goalY: 1,
-        walls: [{
-            x: 4,
-            y: 0,
-            dir: "vertical",
-            length: 1
-        }, {
-            x: 4,
-            y: 1,
-            dir: "horizontal",
-            length: 3
-        }, {
-            x: 0,
-            y: 5,
-            dir: "horizontal",
-            length: 1
-        }, {
-            x: 0,
-            y: 8,
-            dir: "horizontal",
-            length: 2
-        }, {
-            x: 1,
-            y: 10,
-            dir: "horizontal",
-            length: 4
-        }, {
-            x: 7,
-            y: 1,
-            dir: "vertical",
-            length: 4
-        }, {
-            x: 10,
-            y: 14,
-            dir: "vertical",
-            length: 2
-        }, {
-            x: 10,
-            y: 4,
-            dir: "vertical",
-            length: 4
-        }],
-        switchWalls: [],
-        size: 16
-    });
+    await addLevel(level4);
 });
 
 scene("level5", async () => {
-    await addLevel({
-        playerX: 15,
-        playerY: 14,
-        blockX: 10,
-        blockY: 10,
-        goalX: 1,
-        goalY: 11,
-        walls: [{
-            x: 14,
-            y: 8,
-            dir: "horizontal",
-            length: 2
-        }, {
-            x: 3,
-            y: 7,
-            dir: "vertical",
-            length: 1
-        }, {
-            x: 7,
-            y: 7,
-            dir: "horizontal",
-            length: 6
-        }, {
-            x: 6,
-            y: 0,
-            dir: "vertical",
-            length: 7
-        }, {
-            x: 6,
-            y: 13,
-            dir: "vertical",
-            length: 3
-        }, {
-            x: 1,
-            y: 0,
-            dir: "vertical",
-            length: 16
-        }, {
-            x: 15,
-            y: 11,
-            dir: "horizontal",
-            length: 1
-        }, {
-            x: 10,
-            y: 14,
-            dir: "vertical",
-            length: 2
-        }, {
-            x: 11,
-            y: 15,
-            dir: "vertical",
-            length: 1
-        }, {
-            x: 10,
-            y: 15,
-            dir: "horizontal",
-            length: 1
-        }, {
-            x: 8,
-            y: 14,
-            dir: "vertical",
-            length: 2
-        },  {
-            x: 7,
-            y: 14,
-            dir: "horizontal",
-            length: 1
-        },  {
-            x: 7,
-            y: 13,
-            dir: "vertical",
-            length: 1
-        },  {
-            x: 9,
-            y: 12,
-            dir: "vertical",
-            length: 4
-        }],
-        switchWalls: [],
-        size: 16
-    });
+    await addLevel(level5);
 });
 
 scene("level6", async () => {
@@ -566,166 +152,15 @@ scene("level6", async () => {
         pos(20, 15),
         z(98)
     ]);
-    await addLevel({
-        playerX: 0,
-        playerY: 3,
-        blockX: 3,
-        blockY: 3,
-        goalX: 4,
-        goalY: 2,
-        switchX: 8,
-        switchY: 5,
-        walls: [{
-          x: 0,
-          y: 2,
-          dir: "horizontal",
-          length: 10
-        }, {
-          x: 4,
-          y: 2,
-          dir: "vertical",
-          length: 1
-        }],
-        switchWalls: [{
-          x: 4,
-          y: 8,
-          dir: "vertical",
-          length: 2
-        }],
-        size: 10
-    });
+    await addLevel(level6);
 });
 
 scene("level7", async () => {
-    await addLevel({
-        playerX: 0,
-        playerY: 3,
-        blockX: 3,
-        blockY: 2,
-        goalX: 5,
-        goalY: 5,
-        switchX: 8,
-        switchY: 6,
-        walls: [{
-          x: 3,
-          y: 7,
-          dir: "horizontal",
-          length: 1
-        }, {
-          x: 3,
-          y: 2,
-          dir: "horizontal",
-          length: 1
-        }, {
-          x: 2,
-          y: 0,
-          dir: "vertical",
-          length: 6
-        }, {
-          x: 3,
-          y: 5,
-          dir: "vertical",
-          length: 2
-        }, {
-          x: 9,
-          y: 4,
-          dir: "vertical",
-          length: 1
-        }, {
-          x: 3,
-          y: 0,
-          dir: "vertical",
-          length: 4
-        }],
-        switchWalls: [{
-          x: 4,
-          y: 7,
-          dir: "vertical",
-          length: 3
-        }],
-        size: 10
-    });
+    await addLevel(level7);
 });
 
 scene("level8", async () => {
-    await addLevel({
-        playerX: 1,
-        playerY: 3,
-        blockX: 2,
-        blockY: 3,
-        goalX: 3,
-        goalY: 7,
-        switchX: 7,
-        switchY: 7,
-        walls: [{
-          x: 1,
-          y: 0,
-          dir: "vertical",
-          length: 16,
-        }, {
-          x: 7,
-          y: 0,
-          dir: "vertical",
-          length: 2
-        }, {
-          x: 10,
-          y: 3,
-          dir: "horizontal",
-          length: 2
-        }, {
-          x: 12,
-          y: 3,
-          dir: "vertical",
-          length: 2
-        }, {
-          x: 12,
-          y: 5,
-          dir: "vertical",
-          length: 4
-        }, {
-          x: 12,
-          y: 10,
-          dir: "vertical",
-          length: 2
-        }, {
-          x: 8,
-          y: 12,
-          dir: "horizontal",
-          length: 4
-        }, {
-          x: 4,
-          y: 3,
-          dir: "horizontal",
-          length: 5 
-        }],
-        switchWalls: [{
-          x: 7,
-          y: 2,
-          dir: "vertical",
-          length: 1
-        }, {
-          x: 6,
-          y: 8,
-          dir: "vertical",
-          length: 4
-        }, {
-          x: 9,
-          y: 3,
-          dir: "horizontal",
-          length: 1
-        }, {
-          x: 12,
-          y: 9,
-          dir: "vertical",
-          length: 1
-        }, {
-          x: 6,
-          y: 12,
-          dir: "horizontal",
-          length: 2
-        },],
-        size: 16
-    });
+    await addLevel(level8);
 });
 
 function grid() {

@@ -1,0 +1,46 @@
+# This workflow will do a clean install of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Node.js CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [17.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: |
+        npm install
+        cd public
+        mkdir scripts
+        cd ..
+        npm run build
+        cd public
+        git init
+        git remote add origin https://github.com/mweir-mcst/tight-squeeze.git
+        git config user.email "email@example.com"
+        git config user.name "GitHub Pages"
+        git add .
+        git commit -m "GitHub Pages"
+        git branch gh-pages
+        header=$(echo -n "ad-m:${GH_TOKEN}" | base64)
+        git -c http.extraheader="AUTHORIZATION: basic $header" push -u origin gh-pages
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

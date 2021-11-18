@@ -1,0 +1,72 @@
+{
+  "type": "object",
+  "properties": {
+    "playerX": {
+      "type": "number"
+    },
+    "playerY": {
+      "type": "number"
+    },
+    "blockX": {
+      "type": "number"
+    },
+    "blockY": {
+      "type": "number"
+    },
+    "goalX": {
+      "type": "number"
+    },
+    "goalY": {
+      "type": "number"
+    },
+    "walls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "dir": {
+            "enum": ["horizontal", "vertical"]
+          },
+          "length": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "switchWalls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "dir": {
+            "enum": ["horizontal", "vertical"]
+          },
+          "length": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "switchX": {
+      "type": "number"
+    },
+    "switchY": {
+      "type": "number"
+    },
+    "size": {
+      "type": "number"
+    }
+  }
+}

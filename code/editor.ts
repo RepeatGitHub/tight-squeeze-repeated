@@ -1,6 +1,6 @@
 import "bootstrap";
 import kaboom, {AreaComp, CircleComp, ColorComp, GameObj, OriginComp, PosComp} from "kaboom";
-import Global, {Level, LevelInitInfo} from "./global";
+import Global, {Level, LevelInitInfo, WallInitInfo} from "./global";
 
 const kbm = kaboom({
     width: 1000,

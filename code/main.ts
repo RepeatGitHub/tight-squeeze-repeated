@@ -390,7 +390,7 @@ scene("levelSelect", async () => {
 
 scene("levelEditor", () => {
     createOverlay();
-    location.href = "/editor.html";
+    location.href = "editor.html";
 });
 
 go("welcome");

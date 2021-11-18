@@ -2,12 +2,22 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="63ba79d3-4a19-408f-9b21-57390f269be1" name="Changes" comment="Level Editor is Complete!">
-      <change afterPath="$PROJECT_DIR$/code/global.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/levelSchema.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/levels/level1.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/levels/level2.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/levels/level3.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/levels/level4.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/levels/level5.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/levels/level6.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/levels/level7.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/levels/level8.json" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/public/scripts/editor.js" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/public/scripts/main.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/code/editor.ts" beforeDir="false" afterPath="$PROJECT_DIR$/code/editor.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/code/global.ts" beforeDir="false" afterPath="$PROJECT_DIR$/code/global.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/code/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/code/main.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -63,16 +73,17 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="javascript.nodejs.core.library.configured.version" value="17.1.0" />
     <property name="javascript.nodejs.core.library.typings.version" value="16.11.7" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/run.js" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/levels" />
     <property name="list.type.of.created.stylesheet" value="CSS" />
     <property name="nodejs_interpreter_path" value="node" />
     <property name="nodejs_package_manager_path" value="npm" />
-    <property name="settings.editor.selected.configurable" value="org.jetbrains.plugins.github.ui.GithubSettingsConfigurable" />
+    <property name="settings.editor.selected.configurable" value="settings.json.schema" />
     <property name="ts.external.directory.path" value="C:\Users\compsci\AppData\Local\JetBrains\Toolbox\apps\WebStorm\ch-0\212.5457.55\plugins\JavaScriptLanguage\jsLanguageServicesImpl\external" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\compsci\WebstormProjects\tight-squeeze" />
       <recent name="C:\Users\compsci\WebstormProjects\tight-squeeze\public" />
     </key>
   </component>

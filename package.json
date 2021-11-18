@@ -10,7 +10,8 @@
     "kaboom": "^2000.1.4"
   },
   "scripts": {
-    "start": "esbuild code/main.ts --bundle > public/scripts/main.js && esbuild code/editor.ts --bundle > public/scripts/editor.js && node ."
+    "build": "esbuild code/main.ts --bundle > public/scripts/main.js && esbuild code/editor.ts --bundle > public/scripts/editor.js",
+    "start": "node ."
   },
   "repository": {
     "type": "git",

@@ -1,20 +1,19 @@
 import "bootstrap";
 import kaboom, {AreaComp, CircleComp, ColorComp, GameObj, OriginComp, PosComp} from "kaboom";
-import Global, {Level, LevelInitInfo, WallInitInfo} from "./global";
+import Global, {Level, LevelInitInfo, SwitchInitInfo, WallInitInfo} from "./global";
 
 const kbm = kaboom({
     width: 1000,
     height: 1000,
-    background: [0, 0, 0],
+    background: [255, 255, 255],
     font: "sinko"
 });
 
 const levelSizeInput: HTMLSelectElement = document.querySelector("#level-size");
 const addSwitchButton: HTMLButtonElement = document.querySelector("#add-switch");
-const removeSwitchButton: HTMLButtonElement = document.querySelector("#remove-switch");
 const addWallButton: HTMLButtonElement = document.querySelector("#add-wall");
 const addSwitchWallButton: HTMLButtonElement = document.querySelector("#add-wall-switch");
-const removeWallButton: HTMLButtonElement = document.querySelector("#remove-wall");
+const removeObjectButton: HTMLButtonElement = document.querySelector("#remove-object");
 
 let mouse = vec2();
 let editing = true;
@@ -30,6 +29,7 @@ let currentLevelData: LevelInitInfo = {
     goalY: 5,
     walls: [],
     switchWalls: [],
+    switches: [],
     size: 10
 };
 
@@ -54,7 +54,8 @@ scene("test", () => {
 });
 
 let addingWall = false;
-let removingWall = false;
+let addingSwitch = false;
+let removingObject = false;
 let wallType = 0;
 let state = 0;
 let point1: GameObj<PosComp|CircleComp|OriginComp|ColorComp>, point2: GameObj<PosComp|CircleComp|OriginComp|ColorComp>;
@@ -62,21 +63,20 @@ let point1: GameObj<PosComp|CircleComp|OriginComp|ColorComp>, point2: GameObj<Po
 function disableButtons() {
     addWallButton.disabled = true;
     addSwitchWallButton.disabled = true;
-    removeWallButton.disabled = true;
-    addSwitchButton.disabled = true;
-    removeSwitchButton.disabled = true;
+    removeObjectButton.disabled = true;
     levelSizeInput.disabled = true;
+    addSwitchButton.disabled = true;
 }
 
 function enableButtons() {
     addWallButton.disabled = false;
     addSwitchWallButton.disabled = false;
     levelSizeInput.disabled = false;
+    addSwitchButton.disabled = false;
 }
 
 scene("edit", async() => {
-    const cellSize = 1000 / currentLevelData.size;
-    let switchObj;
+    const cellSize = Math.floor(2000 / currentLevelData.size) / 2;
 
     levelSizeInput.value = currentLevelData.size.toString();
 
@@ -119,18 +119,17 @@ scene("edit", async() => {
         "player"
     ]);
 
-    // Add switch
-    const hasSwitch = typeof currentLevelData.switchX === "number" && typeof currentLevelData.switchY === "number";
-    if (hasSwitch) {
-        switchObj = add([
+    // Add switches
+    for (let i = 0; i < currentLevelData.switches.length; i++) {
+        add([
             sprite("switch", {width: cellSize, height: cellSize}),
-            pos(currentLevelData.switchX * cellSize, currentLevelData.switchY * cellSize),
+            pos(currentLevelData.switches[i].x * cellSize, currentLevelData.switches[i].y * cellSize),
             area({width: cellSize, height: cellSize}),
-            "switch"
+            color(),
+            "switch",
+            {switch: currentLevelData.switches[i]}
         ]);
     }
-    addSwitchButton.disabled = hasSwitch;
-    removeSwitchButton.disabled = !hasSwitch;
 
     // Add walls
     for (let i = 0; i < currentLevelData.walls.length; i++) {
@@ -158,14 +157,15 @@ scene("edit", async() => {
         ]);
     }
 
-    removeWallButton.disabled = currentLevelData.walls.length + currentLevelData.switchWalls.length === 0;
+    removeObjectButton.disabled = currentLevelData.walls.length + currentLevelData.switchWalls.length + currentLevelData.switches.length === 0;
 
     let moving: string = null, offset = vec2(0, 0);
+    let movingSwitch: GameObj<PosComp| { switch: SwitchInitInfo }>;
 
     action(() => {
         if (moving) {
             // @ts-ignore
-            const obj: GameObj<PosComp> = get(moving)[0];
+            const obj: GameObj<PosComp> = moving === "switch" ? movingSwitch : get(moving)[0];
             if (!mouseIsDown()) {
                 if (moving === "player" || moving === "block") {
                     let checkPos = obj.pos.add(cellSize / 2 - 1, cellSize / 2 - 1);
@@ -179,18 +179,25 @@ scene("edit", async() => {
                     obj.moveTo(checkPos.sub(checkPos.x % cellSize, checkPos.y % cellSize));
                     if (obj.pos.x / cellSize > currentLevelData.size - (moving === "goal" ? 5 : 1)) obj.pos.x = (currentLevelData.size - (moving === "goal" ? 5 : 1)) * cellSize;
                     if (obj.pos.y / cellSize > currentLevelData.size - (moving === "goal" ? 5 : 1)) obj.pos.y = (currentLevelData.size - (moving === "goal" ? 5 : 1)) * cellSize;
-                    currentLevelData[moving + "X"] = obj.pos.x / cellSize;
-                    currentLevelData[moving + "Y"] = obj.pos.y / cellSize;
+                    if (moving === "goal") {
+                        currentLevelData[moving + "X"] = obj.pos.x / cellSize;
+                        currentLevelData[moving + "Y"] = obj.pos.y / cellSize;
+                    } else {
+                        currentLevelData.switches[currentLevelData.switches.indexOf(movingSwitch.switch)].x = obj.pos.x / cellSize;
+                        currentLevelData.switches[currentLevelData.switches.indexOf(movingSwitch.switch)].y = obj.pos.y / cellSize;
+                    }
                 }
                 moving = null;
             } else {
-                get(moving)[0].pos = mouse.sub(offset);
+                obj.pos = mouse.sub(offset);
             }
         }
-        if (!moving && mouseIsDown()) {
-            if (switchObj && switchObj.hasPoint(mouse)) {
+        if (!moving && !addingSwitch && !removingObject && mouseIsDown()) {
+            // @ts-ignore
+            movingSwitch = get("switch").find((s: GameObj<AreaComp>) => s.hasPoint(mouse));
+            if (movingSwitch) {
                 moving = "switch";
-                offset = mouse.sub(switchObj.pos);
+                offset = mouse.sub(movingSwitch.pos);
             } else if (player.hasPoint(mouse)) {
                 moving = "player";
                 offset = mouse.sub(player.pos);
@@ -202,20 +209,24 @@ scene("edit", async() => {
                 offset = mouse.sub(goal.pos);
             }
         }
-        if (removingWall) {
+        if (removingObject) {
             // @ts-ignore
             let walls: GameObj<AreaComp|ColorComp| { wall: WallInitInfo }>[] = get("wall");
             walls.forEach(wall => wall.color = rgb(0, 255, 0));
             // @ts-ignore
             let switchWalls: GameObj<AreaComp|ColorComp| { wall: WallInitInfo }>[] = get("switchWall");
             switchWalls.forEach(wall => wall.color = rgb(0, 0, 255));
-            let wall = walls.find((wall: GameObj<AreaComp>) => wall.hasPoint(mouse)) || switchWalls.find((wall: GameObj<AreaComp>) => wall.hasPoint(mouse));
-            if (wall) {
-                wall.color = rgb(255, 0, 0);
+            // @ts-ignore
+            let switches: GameOb<AreaComp|ColorComp| { switch: SwitchInitInfo}>[] = get("switch");
+            switches.forEach(switchObj => switchObj.color = null);
+            let object: (GameObj<AreaComp|ColorComp|{ wall: WallInitInfo|undefined, switch: SwitchInitInfo|undefined}>) = walls.find((wall: GameObj<AreaComp>) => wall.hasPoint(mouse)) || switchWalls.find((wall: GameObj<AreaComp>) => wall.hasPoint(mouse)) || switches.find((switchObj: GameObj<AreaComp>) => switchObj.hasPoint(mouse));
+            if (object) {
+                object.color = rgb(255, 0, 0);
                 if (mouseIsClicked()) {
-                    removingWall = false;
-                    if (currentLevelData.walls.indexOf(wall.wall) > -1) currentLevelData.walls.splice(currentLevelData.walls.indexOf(wall.wall), 1);
-                    if (currentLevelData.switchWalls.indexOf(wall.wall) > -1) currentLevelData.switchWalls.splice(currentLevelData.switchWalls.indexOf(wall.wall), 1);
+                    removingObject = false;
+                    if (currentLevelData.walls.indexOf(object.wall) > -1) currentLevelData.walls.splice(currentLevelData.walls.indexOf(object.wall), 1);
+                    if (currentLevelData.switchWalls.indexOf(object.wall) > -1) currentLevelData.switchWalls.splice(currentLevelData.switchWalls.indexOf(object.wall), 1);
+                    if (currentLevelData.switches.indexOf(object.switch) > -1) currentLevelData.switches.splice(currentLevelData.switches.indexOf(object.switch), 1);
                     enableButtons();
                     go("edit");
                 }
@@ -266,7 +277,7 @@ scene("edit", async() => {
 
 addWallButton.addEventListener("click", () => {
     disableButtons();
-    const cellSize = 1000 / currentLevelData.size;
+    const cellSize = Math.floor(2000 / currentLevelData.size) / 2;
     point1 = add([
         circle(cellSize / 4),
         kbm.origin("center"),
@@ -287,7 +298,7 @@ addWallButton.addEventListener("click", () => {
 
 addSwitchWallButton.addEventListener("click", () => {
     disableButtons();
-    const cellSize = 1000 / currentLevelData.size;
+    const cellSize = Math.floor(2000 / currentLevelData.size) / 2;
     point1 = add([
         circle(cellSize / 4),
         kbm.origin("center"),
@@ -306,9 +317,9 @@ addSwitchWallButton.addEventListener("click", () => {
     addingWall = true;
 });
 
-removeWallButton.addEventListener("click", () => {
+removeObjectButton.addEventListener("click", () => {
    disableButtons();
-   removingWall = true;
+   removingObject = true;
 });
 
 go("edit");
@@ -336,8 +347,9 @@ levelSizeInput.addEventListener("change", () => {
 });
 
 addSwitchButton.addEventListener("click", async () => {
+    addingSwitch = true;
     disableButtons();
-    const cellSize = 1000 / currentLevelData.size;
+    const cellSize = Math.floor(2000 / currentLevelData.size) / 2;
     let tempSwitch = add([
         sprite("switch", {width: cellSize, height: cellSize}),
         pos(),
@@ -346,21 +358,23 @@ addSwitchButton.addEventListener("click", async () => {
     const interval = setInterval(() => {
         if (mouseIsDown()) {
             clearInterval(interval);
-            currentLevelData.switchX = Math.floor(tempSwitch.pos.x / cellSize);
-            currentLevelData.switchY = Math.floor(tempSwitch.pos.y / cellSize);
+            currentLevelData.switches.push({
+                x: Math.floor(tempSwitch.pos.x / cellSize),
+                y: Math.floor(tempSwitch.pos.y / cellSize)
+            });
             tempSwitch.destroy();
             enableButtons();
+            const interval2 = setInterval(() => {
+                if (!mouseIsDown()) {
+                    addingSwitch = false;
+                    clearInterval(interval2);
+                }
+            })
             go("edit");
         } else {
             tempSwitch.pos = mouse;
         }
     }, 0);
-});
-
-removeSwitchButton.addEventListener("click", () => {
-    delete currentLevelData.switchX;
-    delete currentLevelData.switchY;
-    go("edit");
 });
 
 setInterval(() => {

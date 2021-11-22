@@ -59,11 +59,19 @@
         }
       }
     },
-    "switchX": {
-      "type": "number"
-    },
-    "switchY": {
-      "type": "number"
+    "switches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          }
+        }
+      }
     },
     "size": {
       "type": "number"

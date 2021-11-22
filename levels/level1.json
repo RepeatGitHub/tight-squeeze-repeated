@@ -1,1 +1,1 @@
-{"playerX":0,"playerY":3,"blockX":3,"blockY":3,"goalX":5,"goalY":5,"walls":[{"x":0,"y":2,"dir":"horizontal","length":10}],"switchWalls":[],"size":10}
+{"playerX":0,"playerY":3,"blockX":3,"blockY":3,"goalX":5,"goalY":5,"walls":[{"x":0,"y":2,"dir":"horizontal","length":10}],"switchWalls":[],"switches":[],"size":10}

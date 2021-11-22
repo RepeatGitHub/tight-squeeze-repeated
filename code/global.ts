@@ -1,4 +1,4 @@
-import {ColorComp, PosComp, SpriteComp, Vec2} from "kaboom";
+import {AreaComp, ColorComp, GameObj, PosComp, SpriteComp, Vec2} from "kaboom";
 
 export default class Global {
     static init(mouse: Vec2) {
@@ -23,8 +23,7 @@ export class Level {
     hasWon: boolean;
 
     constructor(options: LevelInitInfo, onComplete: () => void, onReset: () => void) {
-        const cellSize = 1000 / options.size;
-        let switchObj;
+        const cellSize = Math.floor(2000 / options.size) / 2;
         this.hasWon = false;
         let moving = false;
 
@@ -70,13 +69,14 @@ export class Level {
             "goal"
         ]);
 
-        // Add switch
-        if (typeof options.switchX === "number" && typeof options.switchY === "number") {
-            switchObj = add([
+        // Add switches
+        for (let i = 0; i < options.switches.length; i++) {
+            add([
                 sprite("switch", {width: cellSize, height: cellSize}),
-                pos(options.switchX * cellSize, options.switchY * cellSize),
-                area({width: cellSize, height: cellSize})
-            ])
+                pos(options.switches[i].x * cellSize, options.switches[i].y * cellSize),
+                area({width: cellSize, height: cellSize}),
+                "switch"
+            ]);
         }
 
         // Add block
@@ -101,8 +101,8 @@ export class Level {
         for (let i = 0; i < options.walls.length; i++) {
             let wall = options.walls[i];
             add([
-                pos(wall.dir === "vertical" ? wall.x * cellSize - 1 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 1),
-                area({width: wall.dir === "vertical" ? 2 : wall.length * cellSize, height: wall.dir === "vertical" ? wall.length * cellSize : 2}),
+                pos(wall.x * cellSize - 1, wall.y * cellSize - 1),
+                area({width: wall.dir === "vertical" ? 2 : wall.length * cellSize + 2, height: wall.dir === "vertical" ? wall.length * cellSize + 2 : 2}),
                 solid()
             ]);
             add([
@@ -114,8 +114,8 @@ export class Level {
         for (let i = 0; i < options.switchWalls.length; i++) {
             let wall = options.switchWalls[i];
             add([
-                pos(wall.dir === "vertical" ? wall.x * cellSize - 1 : wall.x * cellSize, wall.dir === "vertical" ? wall.y * cellSize : wall.y * cellSize - 1),
-                area({width: wall.dir === "vertical" ? 2 : wall.length * cellSize, height: wall.dir === "vertical" ? wall.length * cellSize : 2}),
+                pos(wall.x * cellSize - 1, wall.y * cellSize - 1),
+                area({width: wall.dir === "vertical" ? 2 : wall.length * cellSize + 2, height: wall.dir === "vertical" ? wall.length * cellSize + 2 : 2}),
                 solid(),
                 color(0, 0, 255),
                 "switchWallCollision"
@@ -193,7 +193,7 @@ export class Level {
             onReset();
         });
 
-        if (switchObj) switchObj.collides("block", () => {
+        block.collides("switch", () => {
             play("switch");
         })
 
@@ -206,14 +206,12 @@ export class Level {
                 onComplete();
                 this.hasWon = false;
             }
-            if (switchObj) {
-                if (block.isTouching(switchObj)) {
-                    every("switchWallCollision", i => i.solid = false);
-                    every("switchWallModel", i => i.opacity = 0.5);
-                } else {
-                    every("switchWallCollision", i => i.solid = true);
-                    every("switchWallModel", i => i.opacity = 1);
-                }
+            if (get("switch").find((switchObj: GameObj<AreaComp>) => switchObj.isTouching(block))) {
+                every("switchWallCollision", i => i.solid = false);
+                every("switchWallModel", i => i.opacity = 0.5);
+            } else {
+                every("switchWallCollision", i => i.solid = true);
+                every("switchWallModel", i => i.opacity = 1);
             }
         })
     }
@@ -226,6 +224,11 @@ export type WallInitInfo = {
     length: number
 }
 
+export type SwitchInitInfo = {
+    x: number,
+    y: number
+}
+
 export type LevelInitInfo = {
     playerX: number,
     playerY: number,
@@ -235,7 +238,6 @@ export type LevelInitInfo = {
     goalY: number,
     walls: WallInitInfo[],
     switchWalls: WallInitInfo[],
-    switchX?: number,
-    switchY?: number,
+    switches: SwitchInitInfo[],
     size: number
 }

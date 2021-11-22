@@ -1,1 +1,1 @@
-{"playerX":0,"playerY":4,"blockX":1,"blockY":1,"goalX":5,"goalY":5,"walls":[{"x":7,"y":5,"dir":"horizontal","length":3},{"x":2,"y":0,"dir":"vertical","length":1},{"x":4,"y":1,"dir":"horizontal","length":3}],"switchWalls":[],"size":10}
+{"playerX":0,"playerY":4,"blockX":1,"blockY":1,"goalX":5,"goalY":5,"walls":[{"x":7,"y":5,"dir":"horizontal","length":3},{"x":2,"y":0,"dir":"vertical","length":1},{"x":4,"y":1,"dir":"horizontal","length":3}],"switchWalls":[],"switches":[],"size":10}

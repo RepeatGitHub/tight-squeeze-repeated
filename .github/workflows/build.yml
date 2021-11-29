@@ -19,9 +19,7 @@ jobs:
     - name: Build GitHub Pages
       run: |
         npm install
-        cd public
-        mkdir scripts
-        cd ..
+        mkdir public/scripts
         npm run build
         cd public
         git init

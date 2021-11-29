@@ -24,10 +24,10 @@ jobs:
         cd public
         git init
         git remote add origin https://github.com/mweir-mcst/tight-squeeze.git
-        git config user.email "email@example.com"
-        git config user.name "GitHub Pages"
+        git config user.email "actions@github.com"
+        git config user.name "GitHub Actions"
         git add .
-        git commit -m "GitHub Pages"
+        git commit -m "GitHub Pages" --author "${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>"
         git branch gh-pages
         header=$(echo -n "ad-m:${GH_TOKEN}" | base64)
         git -c http.extraheader="AUTHORIZATION: basic $header" push --force -u origin gh-pages

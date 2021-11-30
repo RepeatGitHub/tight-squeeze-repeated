@@ -9,6 +9,11 @@ import level5 from "../levels/level5.json";
 import level6 from "../levels/level6.json";
 import level7 from "../levels/level7.json";
 import level8 from "../levels/level8.json";
+import level9 from "../levels/level9.json";
+import level10 from "../levels/level10.json";
+import level11 from "../levels/level11.json";
+import level12 from "../levels/level12.json";
+import level13 from "../levels/level13.json";
 
 const kbm = kaboom({
     width: 1000,
@@ -163,6 +168,26 @@ scene("level8", async () => {
     await addLevel(level8);
 });
 
+scene("level9", async () => {
+    await addLevel(level9);
+});
+
+scene("level10", async () => {
+    await addLevel(level10);
+});
+
+scene("level11", async () => {
+    await addLevel(level11);
+});
+
+scene("level12", async () => {
+    await addLevel(level12);
+});
+
+scene("level13", async () => {
+    await addLevel(level13);
+});
+
 function grid() {
     for (let i = 0; i < 10; i++) {
         for (let j = 0; j < 10; j++) {
@@ -175,7 +200,7 @@ function grid() {
     }
 }
 
-scene("level9", () => {
+scene("level14", () => {
     grid();
 
     let topText = add([

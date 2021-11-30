@@ -1,4 +1,4 @@
-import {AreaComp, ColorComp, GameObj, PosComp, SpriteComp, Vec2} from "kaboom";
+import {AreaComp, ColorComp, GameObj, PosComp, SolidComp, SpriteComp, Vec2} from "kaboom";
 
 export default class Global {
     static init(mouse: Vec2) {
@@ -103,7 +103,8 @@ export class Level {
             add([
                 pos(wall.x * cellSize - 1, wall.y * cellSize - 1),
                 area({width: wall.dir === "vertical" ? 2 : wall.length * cellSize + 2, height: wall.dir === "vertical" ? wall.length * cellSize + 2 : 2}),
-                solid()
+                solid(),
+                "wallCollision"
             ]);
             add([
                 rect(wall.dir === "vertical" ? 6 : wall.length * cellSize, wall.dir === "vertical" ? wall.length * cellSize : 6),
@@ -129,13 +130,22 @@ export class Level {
             ]);
         }
 
+        function wallAt(x: number, y: number): boolean {
+            // @ts-ignore
+            let walls: GameObj<AreaComp | SolidComp>[] = get("wallCollision").concat(get("switchWallCollision"));
+            for (let wall of walls) {
+                if (wall.hasPoint(vec2(x, y)) && wall.solid) return true;
+            }
+            return false;
+        }
+
         // Directional movement
         keyPress(["left", "a"], async () => {
             if (this.hasWon || moving) return;
             moving = true;
             let sound = play("move");
             for (let i = 0; i < 4; i++) {
-                if (player.pos.x === block.pos.x + cellSize * 5 && player.pos.y === block.pos.y + cellSize * 2 ) block.moveBy(cellSize / -4, 0);
+                if (player.pos.x === block.pos.x + cellSize * 5 && player.pos.y === block.pos.y + cellSize * 2 && !wallAt(player.pos.x - 1, player.pos.y)) block.moveBy(cellSize / -4, 0);
                 player.moveBy(cellSize / -4, 0);
                 await wait(0);
             }
@@ -150,7 +160,7 @@ export class Level {
             moving = true;
             let sound = play("move");
             for (let i = 0; i < 4; i++) {
-                if (player.pos.x === block.pos.x - cellSize && player.pos.y === block.pos.y + cellSize * 2) block.moveBy(cellSize / 4, 0);
+                if (player.pos.x === block.pos.x - cellSize && player.pos.y === block.pos.y + cellSize * 2 && !wallAt(player.pos.x + cellSize - 1, player.pos.y)) block.moveBy(cellSize / 4, 0);
                 player.moveBy(cellSize / 4, 0);
                 await wait(0);
             }
@@ -164,7 +174,7 @@ export class Level {
             moving = true;
             let sound = play("move");
             for (let i = 0; i < 4; i++) {
-                if (player.pos.x === block.pos.x + cellSize * 2 && player.pos.y === block.pos.y + cellSize * 5) block.moveBy(0, cellSize / -4);
+                if (player.pos.x === block.pos.x + cellSize * 2 && player.pos.y === block.pos.y + cellSize * 5 && !wallAt(player.pos.x, player.pos.y - 1)) block.moveBy(0, cellSize / -4);
                 player.moveBy(0, cellSize / -4);
                 await wait(0);
             }
@@ -179,7 +189,7 @@ export class Level {
             moving = true;
             let sound = play("move");
             for (let i = 0; i < 4; i++) {
-                if (player.pos.x === block.pos.x + cellSize * 2 && player.pos.y === block.pos.y - cellSize) block.moveBy(0, cellSize / 4);
+                if (player.pos.x === block.pos.x + cellSize * 2 && player.pos.y === block.pos.y - cellSize && !wallAt(player.pos.x, player.pos.y + cellSize - 1)) block.moveBy(0, cellSize / 4);
                 player.moveBy(0, cellSize / 4);
                 await wait(0);
             }

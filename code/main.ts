@@ -18,7 +18,7 @@ import level13 from "../levels/level13.json";
 const kbm = kaboom({
     width: 1000,
     height: 1000,
-    background: [255, 255, 255],
+    background: [0, 0, 0],
     font: "sinko"
 });
 
